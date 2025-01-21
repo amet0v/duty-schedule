@@ -16,7 +16,7 @@ import java.util.Date;
 public class EmployeeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected Long Id;
+    protected Long id;
     protected String fullName;
     @ManyToOne
     @JoinColumn(name = "department_id", nullable = false)

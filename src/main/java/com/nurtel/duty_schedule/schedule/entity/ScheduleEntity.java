@@ -15,7 +15,7 @@ import java.util.Date;
 public class ScheduleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected Long Id;
+    protected Long id;
     protected Date startDate;
     protected Date endDate;
     @ManyToOne

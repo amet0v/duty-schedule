@@ -1,6 +1,7 @@
 package com.nurtel.duty_schedule.user.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -13,7 +14,8 @@ import lombok.*;
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected Long Id;
+    protected Long id;
+    @Size(min = 6, message = "Password must be at least 6 characters long")
     protected String username;
     protected String password;
 }
