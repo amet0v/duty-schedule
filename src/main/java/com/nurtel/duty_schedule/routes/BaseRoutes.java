@@ -5,9 +5,10 @@ public class BaseRoutes {
     public final static String NOT_SECURED = ROOT + "/not-secured";
     public final static String NOT_SECURED_INIT = NOT_SECURED + "/init";
 
-    public final static String USERS = ROOT + "/users";
     public final static String USER = ROOT + "/user";
     public final static String USER_BY_ID = USER + "/{id}";
     public final static String USER_EDIT = USER + "/edit";
 
+    public final static String DEPARTMENT = ROOT + "department";
+    public final static String DEPARTMENT_BY_ID = DEPARTMENT + "/{id}";
 }

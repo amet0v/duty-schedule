@@ -1,7 +1,7 @@
 package com.nurtel.duty_schedule.user.controller;
 
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
-import com.nurtel.duty_schedule.exceptions.UserNotFoundException;
+import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.routes.BaseRoutes;
 import com.nurtel.duty_schedule.user.dto.UserRequest;
 import com.nurtel.duty_schedule.user.dto.UserResponse;
@@ -48,14 +48,14 @@ public class UserController {
         return UserResponse.of(user);
     }
 
-    @GetMapping(BaseRoutes.USERS)
+    @GetMapping(BaseRoutes.USER)
     public List<UserResponse> getUsers(){
         return userRepository.findAll().stream().map(UserResponse::of).collect(Collectors.toList());
     }
 
     @GetMapping(BaseRoutes.USER_BY_ID)
-    public UserResponse getUser(@PathVariable Long id) throws UserNotFoundException {
-        return UserResponse.of(userRepository.findById(id).orElseThrow(UserNotFoundException::new));
+    public UserResponse getUser(@PathVariable Long id) throws NotFoundException {
+        return UserResponse.of(userRepository.findById(id).orElseThrow(NotFoundException::new));
     }
 
     @PostMapping(BaseRoutes.USER)
@@ -72,8 +72,8 @@ public class UserController {
     }
 
     @PutMapping(BaseRoutes.USER_EDIT)
-    public UserResponse editUser(Principal principal, @RequestBody UserRequest request) throws UserNotFoundException {
-        UserEntity user = userRepository.findByUsername(principal.getName()).orElseThrow(UserNotFoundException::new);
+    public UserResponse editUser(Principal principal, @RequestBody UserRequest request) throws NotFoundException {
+        UserEntity user = userRepository.findByUsername(principal.getName()).orElseThrow(NotFoundException::new);
         if (request.getUsername() != null) user.setUsername(request.getUsername());
         if (request.getPassword() != null) user.setPassword(passwordEncoder.encode(request.getPassword()));
 
@@ -82,8 +82,8 @@ public class UserController {
     }
 
     @DeleteMapping(BaseRoutes.USER_BY_ID)
-    public String deleteUser(@PathVariable Long id) throws UserNotFoundException {
-        UserEntity user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+    public String deleteUser(@PathVariable Long id) throws NotFoundException {
+        UserEntity user = userRepository.findById(id).orElseThrow(NotFoundException::new);
 
         userRepository.deleteById(id);
         return HttpStatus.OK.name();
