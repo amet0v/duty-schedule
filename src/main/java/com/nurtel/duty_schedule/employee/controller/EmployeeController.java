@@ -43,6 +43,7 @@ public class EmployeeController {
     public EmployeeResponse editEmployee(@PathVariable Long id, @RequestBody EmployeeRequest request)
             throws BadRequestException, NotFoundException {
         EmployeeEntity employee = employeeRepository.findById(id).orElseThrow(NotFoundException::new);
+        EmployeeEntity ifUnavailable = employeeRepository.findById(request.getIfUnavailable().getId()).orElseThrow(NotFoundException::new);
 
         if(request.getFullName() != null) employee.setFullName(request.getFullName());
         if(request.getDepartment() != null) employee.setDepartment(request.getDepartment());
@@ -51,7 +52,7 @@ public class EmployeeController {
         if(request.getMainPhoneNumber() != null) employee.setMainPhoneNumber(request.getMainPhoneNumber());
         if(request.getAlternativePhoneNumber() != null) employee.setAlternativePhoneNumber(request.getAlternativePhoneNumber());
         if(request.getTelegram() != null) employee.setTelegram(request.getTelegram());
-        if(request.getIfUnavailable() != null) employee.setIfUnavailable(request.getIfUnavailable());
+        if(request.getIfUnavailable() != null) employee.setIfUnavailable(ifUnavailable);
 
         employee = employeeRepository.save(employee);
         return EmployeeResponse.of(employee);

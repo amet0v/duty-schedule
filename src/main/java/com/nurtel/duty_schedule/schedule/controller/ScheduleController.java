@@ -43,15 +43,14 @@ public class ScheduleController {
     }
 
     @PostMapping(BaseRoutes.SCHEDULE)
-    public ScheduleResponse createEvent(@RequestBody ScheduleRequest request) throws BadRequestException {
+    public ScheduleResponse createEvent(@RequestBody ScheduleRequest request) throws BadRequestException, NotFoundException {
         request.validate();
 
-        EmployeeEntity employee = employeeRepository.findById(request.getEmployee().getId()).orElseThrow(BadRequestException::new);
+        EmployeeEntity employee = employeeRepository.findById(request.getEmployee().getId()).orElseThrow(NotFoundException::new);
 
-        LocalDate currentDate = LocalDate.now();
         Optional<ScheduleEntity> duty = scheduleRepository.findDutyByDepartmentAndDate(
                 employee.getDepartment().getId(),
-                currentDate,
+                request.getStartDate(),
                 EventTypes.Duty
         );
         if (duty.isPresent()) throw new BadRequestException();
