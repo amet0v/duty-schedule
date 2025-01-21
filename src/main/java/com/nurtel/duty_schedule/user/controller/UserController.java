@@ -11,7 +11,7 @@ import com.nurtel.duty_schedule.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -24,14 +24,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${init.username}")
     private String initUsername;
     @Value("${init.password}")
     private String initPassword;
 
-    @PostMapping(BaseRoutes.NOT_SECURED_INIT)
+    @GetMapping(BaseRoutes.NOT_SECURED_INIT)
     public UserResponse init(){
         Optional<UserEntity> checkUser = userRepository.findByUsername(initUsername);
         UserEntity user;
