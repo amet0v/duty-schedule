@@ -1,0 +1,27 @@
+package com.nurtel.duty_schedule.schedule.dto.request;
+
+import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
+import com.nurtel.duty_schedule.exceptions.BadRequestException;
+import com.nurtel.duty_schedule.schedule.entity.EventTypes;
+import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.util.Date;
+
+@Getter
+@Builder
+public class ScheduleRequest {
+    protected Date startDate;
+    protected Date endDate;
+    protected EmployeeEntity employee;
+    protected EventTypes event;
+
+    public void validate() throws BadRequestException {
+        if (startDate == null) throw new BadRequestException();
+        if (employee == null) throw new BadRequestException();
+
+        if (endDate == null) endDate = startDate;
+        //if (event == EventTypes.Duty && (startDate != endDate)) throw new BadRequestException();
+    }
+}

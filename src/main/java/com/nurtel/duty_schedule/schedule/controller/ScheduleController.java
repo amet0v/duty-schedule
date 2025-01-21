@@ -1,4 +1,60 @@
 package com.nurtel.duty_schedule.schedule.controller;
 
+import com.nurtel.duty_schedule.exceptions.BadRequestException;
+import com.nurtel.duty_schedule.exceptions.NotFoundException;
+import com.nurtel.duty_schedule.routes.BaseRoutes;
+import com.nurtel.duty_schedule.schedule.dto.request.ScheduleRequest;
+import com.nurtel.duty_schedule.schedule.dto.response.ScheduleResponse;
+import com.nurtel.duty_schedule.schedule.entity.EventTypes;
+import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
+import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@RestController
+@RequiredArgsConstructor
 public class ScheduleController {
+    private final ScheduleRepository scheduleRepository;
+
+    @GetMapping(BaseRoutes.SCHEDULE_GET_DUTY_BY_DEPARTMENT)
+    public ScheduleResponse getDutyForDepartmentByDate(@PathVariable Long departmentId) throws NotFoundException {
+        LocalDate currentDate = LocalDate.now();
+        Optional<ScheduleEntity> duty = scheduleRepository.findDutyByDepartmentAndDate(departmentId, currentDate, EventTypes.Duty);
+        if (duty.isEmpty()) throw new NotFoundException();
+        return ScheduleResponse.of(duty.get());
+    }
+
+    @GetMapping(BaseRoutes.SCHEDULE)
+    public List<ScheduleResponse> getEmployeeEvents(
+            @RequestParam Long employeeId,
+            @RequestParam EventTypes event
+    ){
+        List<ScheduleEntity> events = scheduleRepository.findEventsByEmployee(employeeId, event);
+        return events.stream().map(ScheduleResponse::of).collect(Collectors.toList());
+    }
+
+    @PostMapping(BaseRoutes.SCHEDULE)
+    public ScheduleResponse createEvent(@RequestBody ScheduleRequest request) throws BadRequestException {
+        request.validate();
+        ScheduleEntity schedule = ScheduleEntity.builder()
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .employee(request.getEmployee())
+                .build();
+
+        schedule = scheduleRepository.save(schedule);
+        return ScheduleResponse.of(schedule);
+    }
+
+    @DeleteMapping(BaseRoutes.SCHEDULE_BY_ID)
+    public String deleteEvent(@PathVariable Long id){
+        scheduleRepository.deleteById(id);
+        return HttpStatus.OK.name();
+    }
 }
