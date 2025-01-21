@@ -22,6 +22,7 @@ public class EmployeeEntity {
     @JoinColumn(name = "department_id", nullable = false)
     protected DepartmentEntity department;
     protected Boolean isManager;
+    @Column(name = "employee_group")
     protected String group;
     protected String mainPhoneNumber;
     protected String alternativePhoneNumber;

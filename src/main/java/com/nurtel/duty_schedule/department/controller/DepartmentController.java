@@ -1,7 +1,7 @@
 package com.nurtel.duty_schedule.department.controller;
 
-import com.nurtel.duty_schedule.department.dto.DepartmentRequest;
-import com.nurtel.duty_schedule.department.dto.DepartmentResponse;
+import com.nurtel.duty_schedule.department.dto.request.DepartmentRequest;
+import com.nurtel.duty_schedule.department.dto.response.DepartmentResponse;
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;

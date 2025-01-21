@@ -10,12 +10,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "schedule")
+@Table(name = "users")
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
-    @Size(min = 6, message = "Password must be at least 6 characters long")
+    //@Size(min = 6, message = "Password must be at least 6 characters long")
     protected String username;
     protected String password;
 }

@@ -1,4 +1,4 @@
-package com.nurtel.duty_schedule.department.dto;
+package com.nurtel.duty_schedule.department.dto.request;
 
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import lombok.Builder;

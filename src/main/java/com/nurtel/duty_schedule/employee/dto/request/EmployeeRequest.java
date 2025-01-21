@@ -1,14 +1,10 @@
-package com.nurtel.duty_schedule.employee.dto;
+package com.nurtel.duty_schedule.employee.dto.request;
 
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.Date;
 
 @Getter
 @Builder

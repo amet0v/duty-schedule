@@ -1,7 +1,7 @@
 package com.nurtel.duty_schedule.employee.controller;
 
-import com.nurtel.duty_schedule.employee.dto.EmployeeRequest;
-import com.nurtel.duty_schedule.employee.dto.EmployeeResponse;
+import com.nurtel.duty_schedule.employee.dto.request.EmployeeRequest;
+import com.nurtel.duty_schedule.employee.dto.response.EmployeeResponse;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;

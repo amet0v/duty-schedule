@@ -1,4 +1,4 @@
-package com.nurtel.duty_schedule.user.dto;
+package com.nurtel.duty_schedule.user.dto.response;
 
 import com.nurtel.duty_schedule.user.entity.UserEntity;
 import lombok.Builder;

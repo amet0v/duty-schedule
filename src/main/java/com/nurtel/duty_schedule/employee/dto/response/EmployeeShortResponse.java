@@ -1,10 +1,7 @@
-package com.nurtel.duty_schedule.employee.dto;
+package com.nurtel.duty_schedule.employee.dto.response;
 
-import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
+import com.nurtel.duty_schedule.department.dto.response.DepartmentShortResponse;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -12,29 +9,27 @@ import java.util.Date;
 
 @Getter
 @Builder
-public class EmployeeResponse {
+public class EmployeeShortResponse {
     protected Long id;
     protected String fullName;
-    protected DepartmentEntity department;
+    protected DepartmentShortResponse department;
     protected Boolean isManager;
     protected String group;
     protected String mainPhoneNumber;
     protected String alternativePhoneNumber;
     protected String telegram;
-    protected EmployeeEntity ifUnavailable;
     protected Date lastCallDate;
 
-    public static EmployeeResponse of(EmployeeEntity employee){
-        return EmployeeResponse.builder()
+    public static EmployeeShortResponse of(EmployeeEntity employee){
+        return EmployeeShortResponse.builder()
                 .id(employee.getId())
                 .fullName(employee.getFullName())
-                .department(employee.getDepartment())
+                .department(DepartmentShortResponse.of(employee.getDepartment()))
                 .isManager(employee.getIsManager())
                 .group(employee.getGroup())
                 .mainPhoneNumber(employee.getMainPhoneNumber())
                 .alternativePhoneNumber(employee.getAlternativePhoneNumber())
                 .telegram(employee.getTelegram())
-                .ifUnavailable(employee.getIfUnavailable())
                 .lastCallDate(employee.getLastCallDate())
                 .build();
     }
