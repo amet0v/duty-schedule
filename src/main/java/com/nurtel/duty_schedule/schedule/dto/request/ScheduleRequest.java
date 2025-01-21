@@ -7,13 +7,14 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
 @Builder
 public class ScheduleRequest {
-    protected Date startDate;
-    protected Date endDate;
+    protected LocalDate startDate;
+    protected LocalDate endDate;
     protected EmployeeEntity employee;
     protected EventTypes event;
 

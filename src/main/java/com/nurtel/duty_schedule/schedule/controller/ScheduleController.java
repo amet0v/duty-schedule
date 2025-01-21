@@ -1,5 +1,7 @@
 package com.nurtel.duty_schedule.schedule.controller;
 
+import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
+import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.routes.BaseRoutes;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ScheduleController {
     private final ScheduleRepository scheduleRepository;
+    private final EmployeeRepository employeeRepository;
 
     @GetMapping(BaseRoutes.SCHEDULE_GET_DUTY_BY_DEPARTMENT)
     public ScheduleResponse getDutyForDepartmentByDate(@PathVariable Long departmentId) throws NotFoundException {
@@ -42,10 +45,22 @@ public class ScheduleController {
     @PostMapping(BaseRoutes.SCHEDULE)
     public ScheduleResponse createEvent(@RequestBody ScheduleRequest request) throws BadRequestException {
         request.validate();
+
+        EmployeeEntity employee = employeeRepository.findById(request.getEmployee().getId()).orElseThrow(BadRequestException::new);
+
+        LocalDate currentDate = LocalDate.now();
+        Optional<ScheduleEntity> duty = scheduleRepository.findDutyByDepartmentAndDate(
+                employee.getDepartment().getId(),
+                currentDate,
+                EventTypes.Duty
+        );
+        if (duty.isPresent()) throw new BadRequestException();
+
         ScheduleEntity schedule = ScheduleEntity.builder()
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
-                .employee(request.getEmployee())
+                .employee(employee)
+                .event(request.getEvent())
                 .build();
 
         schedule = scheduleRepository.save(schedule);

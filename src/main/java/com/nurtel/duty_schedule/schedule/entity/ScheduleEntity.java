@@ -3,6 +3,7 @@ import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
@@ -16,8 +17,8 @@ public class ScheduleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
-    protected Date startDate;
-    protected Date endDate;
+    protected LocalDate startDate;
+    protected LocalDate endDate;
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
     protected EmployeeEntity employee;

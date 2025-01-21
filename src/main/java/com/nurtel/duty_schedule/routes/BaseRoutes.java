@@ -17,7 +17,5 @@ public class BaseRoutes {
 
     public final static String SCHEDULE = ROOT + "/schedule";
     public final static String SCHEDULE_BY_ID = SCHEDULE + "/{id}";
-    public final static String SCHEDULE_GET_DUTY_BY_DEPARTMENT = SCHEDULE + "get-duty/{departmentId}";
-    public final static String SCHEDULE_DUTIES_BY_EMPLOYEE_ID = SCHEDULE + "duties/{employeeId}";
-    public final static String SCHEDULE_VACATIONS_BY_EMPLOYEE_ID = SCHEDULE + "vacations/{employeeId}";
+    public final static String SCHEDULE_GET_DUTY_BY_DEPARTMENT = SCHEDULE + "/get-duty/{departmentId}";
 }
