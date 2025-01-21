@@ -1,6 +1,7 @@
 package com.nurtel.duty_schedule.user.controller;
 
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
+import com.nurtel.duty_schedule.exceptions.MethodNotAllowedException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.routes.BaseRoutes;
 import com.nurtel.duty_schedule.user.dto.UserRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -74,6 +76,20 @@ public class UserController {
     @PutMapping(BaseRoutes.USER_EDIT)
     public UserResponse editUser(Principal principal, @RequestBody UserRequest request) throws NotFoundException {
         UserEntity user = userRepository.findByUsername(principal.getName()).orElseThrow(NotFoundException::new);
+        if (request.getUsername() != null) user.setUsername(request.getUsername());
+        if (request.getPassword() != null) user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        user = userRepository.save(user);
+        return UserResponse.of(user);
+    }
+
+    @PutMapping(BaseRoutes.USER_BY_ID)
+    public UserResponse editUser(
+            @PathVariable Long id, @RequestBody UserRequest request, Principal principal
+    ) throws NotFoundException, MethodNotAllowedException {
+        UserEntity user = userRepository.findById(id).orElseThrow(NotFoundException::new);
+        if (!Objects.equals(principal.getName(), initUsername)) throw new MethodNotAllowedException();
+
         if (request.getUsername() != null) user.setUsername(request.getUsername());
         if (request.getPassword() != null) user.setPassword(passwordEncoder.encode(request.getPassword()));
 

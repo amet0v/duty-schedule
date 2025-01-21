@@ -11,4 +11,8 @@ public class BaseRoutes {
 
     public final static String DEPARTMENT = ROOT + "department";
     public final static String DEPARTMENT_BY_ID = DEPARTMENT + "/{id}";
+
+    public final static String EMPLOYEE = ROOT + "/employee";
+    public final static String EMPLOYEE_BY_ID = EMPLOYEE + "/{id}";
+
 }
