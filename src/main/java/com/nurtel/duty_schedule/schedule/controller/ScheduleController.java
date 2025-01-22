@@ -1,5 +1,6 @@
 package com.nurtel.duty_schedule.schedule.controller;
 
+import com.nurtel.duty_schedule.employee.dto.response.EmployeeResponse;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,19 +28,36 @@ public class ScheduleController {
     private final EmployeeRepository employeeRepository;
 
     @GetMapping(BaseRoutes.SCHEDULE_GET_DUTY_BY_DEPARTMENT)
-    public ScheduleResponse getDutyForDepartmentByDate(@PathVariable Long departmentId) throws NotFoundException {
+    public EmployeeResponse getTodayDutyForDepartment(@PathVariable Long departmentId) throws NotFoundException {
         LocalDate currentDate = LocalDate.now();
+        EmployeeEntity employee;
+
         Optional<ScheduleEntity> duty = scheduleRepository.findDutyByDepartmentAndDate(departmentId, currentDate, EventTypes.Duty);
-        if (duty.isEmpty()) throw new NotFoundException();
-        return ScheduleResponse.of(duty.get());
+
+        if (duty.isEmpty()) {
+            List<EmployeeEntity> employees = employeeRepository.findTopByDepartmentIdOrderByLastCallDateAsc(departmentId);
+            employee = employees.getFirst();
+        }else {
+            employee = duty.get().getEmployee();
+        }
+        employee.setLastCallDate(new Date());
+        employee = employeeRepository.save(employee);
+        return EmployeeResponse.of(employee);
     }
 
     @GetMapping(BaseRoutes.SCHEDULE)
     public List<ScheduleResponse> getEmployeeEvents(
             @RequestParam Long employeeId,
-            @RequestParam EventTypes event
-    ){
-        List<ScheduleEntity> events = scheduleRepository.findEventsByEmployee(employeeId, event);
+            @RequestParam(required = false) EventTypes event
+    ) {
+        List<ScheduleEntity> events;
+
+        if (event == null) {
+            events = scheduleRepository.findAllEventsByEmployee(employeeId);
+        } else {
+            events = scheduleRepository.findEventsByEmployee(employeeId, event);
+        }
+
         return events.stream().map(ScheduleResponse::of).collect(Collectors.toList());
     }
 

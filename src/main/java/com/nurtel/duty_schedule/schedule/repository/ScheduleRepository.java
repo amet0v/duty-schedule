@@ -19,6 +19,11 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
             @Param("eventType") EventTypes eventType
     );
 
+    @Query("SELECT s FROM ScheduleEntity s WHERE s.employee.id = :employeeId")
+    List<ScheduleEntity> findAllEventsByEmployee(
+            @Param("employeeId") Long employeeId
+    );
+
     @Query("SELECT s FROM ScheduleEntity s WHERE s.employee.department.id = :departmentId AND :date BETWEEN s.startDate AND s.endDate AND s.event = :eventType")
     Optional<ScheduleEntity> findDutyByDepartmentAndDate(
             @Param("departmentId") Long departmentId,
