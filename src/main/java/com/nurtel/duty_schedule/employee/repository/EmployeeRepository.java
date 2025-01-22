@@ -13,4 +13,7 @@ import java.util.Optional;
 public interface EmployeeRepository extends JpaRepository<EmployeeEntity, Long> {
     @Query("SELECT e FROM EmployeeEntity e WHERE e.department.id = :departmentId ORDER BY e.lastCallDate ASC, e.id ASC")
     List<EmployeeEntity> findTopByDepartmentIdOrderByLastCallDateAsc(@Param("departmentId") Long departmentId);
+
+    @Query("SELECT e FROM EmployeeEntity e WHERE e.department.id = :departmentId AND e.isManager = true")
+    Optional<EmployeeEntity> findManagerByDepartmentId(@Param("departmentId") Long departmentId);
 }

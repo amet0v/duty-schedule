@@ -22,5 +22,6 @@ public class EmployeeRequest {
     public void validate() throws BadRequestException {
         if (fullName == null || fullName.isBlank()) throw new BadRequestException();
         if (department == null) throw new BadRequestException();
+        if (isManager == null) isManager = false;
     }
 }

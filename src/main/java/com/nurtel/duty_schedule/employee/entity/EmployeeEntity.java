@@ -30,5 +30,6 @@ public class EmployeeEntity {
     @ManyToOne
     @JoinColumn(name = "if_unavailable_id")
     protected EmployeeEntity ifUnavailable;
+    protected EmployeeEntity manager;
     protected Date lastCallDate;
 }

@@ -21,6 +21,7 @@ public class EmployeeResponse {
     protected String alternativePhoneNumber;
     protected String telegram;
     protected EmployeeShortResponse ifUnavailable;
+    protected EmployeeShortResponse manager;
     protected Date lastCallDate;
 
     public static EmployeeResponse of(EmployeeEntity employee){
@@ -34,6 +35,7 @@ public class EmployeeResponse {
                 .alternativePhoneNumber(employee.getAlternativePhoneNumber())
                 .telegram(employee.getTelegram())
                 .ifUnavailable(EmployeeShortResponse.of(employee.getIfUnavailable()))
+                .manager(EmployeeShortResponse.of(employee.getManager()))
                 .lastCallDate(employee.getLastCallDate())
                 .build();
     }
