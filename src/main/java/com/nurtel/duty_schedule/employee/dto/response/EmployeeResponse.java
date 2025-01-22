@@ -25,6 +25,8 @@ public class EmployeeResponse {
     protected Date lastCallDate;
 
     public static EmployeeResponse of(EmployeeEntity employee){
+        if (employee == null) return null;
+
         return EmployeeResponse.builder()
                 .id(employee.getId())
                 .fullName(employee.getFullName())
@@ -34,8 +36,8 @@ public class EmployeeResponse {
                 .mainPhoneNumber(employee.getMainPhoneNumber())
                 .alternativePhoneNumber(employee.getAlternativePhoneNumber())
                 .telegram(employee.getTelegram())
-                .ifUnavailable(EmployeeShortResponse.of(employee.getIfUnavailable()))
-                .manager(EmployeeShortResponse.of(employee.getManager()))
+                .ifUnavailable(employee.getIfUnavailable() != null ? EmployeeShortResponse.of(employee.getIfUnavailable()) : null)
+                .manager(employee.getManager() != null ? EmployeeShortResponse.of(employee.getManager()) : null)
                 .lastCallDate(employee.getLastCallDate())
                 .build();
     }

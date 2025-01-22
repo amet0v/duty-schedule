@@ -28,8 +28,10 @@ public class EmployeeEntity {
     protected String alternativePhoneNumber;
     protected String telegram;
     @ManyToOne
-    @JoinColumn(name = "if_unavailable_id")
+    @JoinColumn(name = "if_unavailable_id",  nullable = true)
     protected EmployeeEntity ifUnavailable;
+    @ManyToOne
+    @JoinColumn(name = "manager_id",  nullable = true)
     protected EmployeeEntity manager;
     protected Date lastCallDate;
 }

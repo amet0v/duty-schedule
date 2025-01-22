@@ -4,6 +4,7 @@ import com.nurtel.duty_schedule.department.dto.request.DepartmentRequest;
 import com.nurtel.duty_schedule.department.dto.response.DepartmentResponse;
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
+import com.nurtel.duty_schedule.department.service.DepartmentService;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.routes.BaseRoutes;
@@ -18,6 +19,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DepartmentController {
     private final DepartmentRepository departmentRepository;
+
+    @PostMapping(BaseRoutes.NOT_SECURED_DEPARTMENT_FILL)
+    public String fillDepartments(){
+        if (departmentRepository.count() == 0) departmentRepository.saveAll(DepartmentService.fillDepartments());
+        return HttpStatus.OK.name();
+    }
 
     @GetMapping(BaseRoutes.DEPARTMENT)
     public List<DepartmentResponse> getDepartments() {

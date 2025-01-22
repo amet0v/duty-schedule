@@ -49,6 +49,13 @@ public class EmployeeController {
                 .manager(manager.orElse(null))
                 .build();
 
+        if (manager.isEmpty() && request.getIsManager()){
+            List<EmployeeEntity> employees = employeeRepository.findAll();
+            for (EmployeeEntity e : employees){
+                e.setManager(employee);
+                employeeRepository.save(e);
+            }
+        }
         employee = employeeRepository.save(employee);
         return EmployeeResponse.of(employee);
     }
