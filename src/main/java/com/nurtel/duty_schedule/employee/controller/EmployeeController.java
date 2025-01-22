@@ -25,7 +25,7 @@ public class EmployeeController {
         return EmployeeResponse.of(employeeRepository.findById(id).orElseThrow(NotFoundException::new));
     }
 
-    @PostMapping(BaseRoutes.EMPLOYEE)
+    @PostMapping(BaseRoutes.EMPLOYEES)
     public EmployeeResponse createEmployee(@RequestBody EmployeeRequest request) throws BadRequestException, NotFoundException {
         request.validate();
 

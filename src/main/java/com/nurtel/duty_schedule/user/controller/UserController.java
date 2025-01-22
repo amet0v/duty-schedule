@@ -50,7 +50,7 @@ public class UserController {
         return UserResponse.of(user);
     }
 
-    @GetMapping(BaseRoutes.USER)
+    @GetMapping(BaseRoutes.USERS)
     public List<UserResponse> getUsers(){
         return userRepository.findAll().stream().map(UserResponse::of).collect(Collectors.toList());
     }
@@ -60,7 +60,7 @@ public class UserController {
         return UserResponse.of(userRepository.findById(id).orElseThrow(NotFoundException::new));
     }
 
-    @PostMapping(BaseRoutes.USER)
+    @PostMapping(BaseRoutes.USERS)
     public UserResponse createUser(@RequestBody UserRequest request) throws BadRequestException {
         request.validate();
 

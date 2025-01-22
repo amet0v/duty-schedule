@@ -26,7 +26,7 @@ public class DepartmentController {
         return HttpStatus.OK.name();
     }
 
-    @GetMapping(BaseRoutes.DEPARTMENT)
+    @GetMapping(BaseRoutes.DEPARTMENTS)
     public List<DepartmentResponse> getDepartments() {
         return departmentRepository.findAll().stream().map(DepartmentResponse::of).collect(Collectors.toList());
     }
@@ -36,7 +36,7 @@ public class DepartmentController {
         return DepartmentResponse.of(departmentRepository.findById(id).orElseThrow(NotFoundException::new));
     }
 
-    @PostMapping(BaseRoutes.DEPARTMENT)
+    @PostMapping(BaseRoutes.DEPARTMENTS)
     public DepartmentResponse createDepartment(@RequestBody DepartmentRequest request) {
         DepartmentEntity department = DepartmentEntity.builder()
                 .name(request.getName())

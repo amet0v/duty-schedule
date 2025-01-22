@@ -35,7 +35,7 @@ public class ScheduleController {
         Optional<ScheduleEntity> duty = scheduleRepository.findDutyByDepartmentAndDate(departmentId, currentDate, EventTypes.Duty);
 
         if (duty.isEmpty()) {
-            List<EmployeeEntity> employees = employeeRepository.findTopByDepartmentIdOrderByLastCallDateAsc(departmentId);
+            List<EmployeeEntity> employees = employeeRepository.findDutyByDepartmentIdOrderByLastCallDateAsc(departmentId);
             employee = employees.getFirst();
         }else {
             employee = duty.get().getEmployee();
