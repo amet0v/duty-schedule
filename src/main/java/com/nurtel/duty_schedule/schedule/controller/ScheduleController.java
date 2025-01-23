@@ -47,7 +47,7 @@ public class ScheduleController {
 
     @GetMapping(BaseRoutes.SCHEDULE)
     public List<ScheduleResponse> getEmployeeEvents(
-            @RequestParam Long employeeId,
+            @PathVariable Long employeeId,
             @RequestParam(required = false) EventTypes event
     ) {
         List<ScheduleEntity> events;
