@@ -1,7 +1,6 @@
 package com.nurtel.duty_schedule.user.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter

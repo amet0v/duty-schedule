@@ -34,4 +34,9 @@ public class EmployeeEntity {
     @JoinColumn(name = "manager_id",  nullable = true)
     protected EmployeeEntity manager;
     protected Date lastCallDate;
+
+    @Override
+    public String toString(){
+        return this.fullName;
+    }
 }

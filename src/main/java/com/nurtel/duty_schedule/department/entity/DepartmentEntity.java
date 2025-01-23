@@ -18,6 +18,11 @@ public class DepartmentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
     protected String name;
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     protected List<EmployeeEntity> employees;
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
 }
