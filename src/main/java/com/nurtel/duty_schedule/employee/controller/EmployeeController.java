@@ -1,5 +1,7 @@
 package com.nurtel.duty_schedule.employee.controller;
 
+import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
+import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.dto.request.EmployeeRequest;
 import com.nurtel.duty_schedule.employee.dto.response.EmployeeResponse;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
@@ -19,6 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class EmployeeController {
     private final EmployeeRepository employeeRepository;
+    private final DepartmentRepository departmentRepository;
 
     @GetMapping(BaseRoutes.EMPLOYEE_BY_ID)
     public EmployeeResponse getEmployee(@PathVariable Long id) throws NotFoundException {
@@ -34,12 +37,13 @@ public class EmployeeController {
             ifUnavailable = employeeRepository.findById(request.getIfUnavailable().getId()).orElseThrow(NotFoundException::new);
         }
 
+        DepartmentEntity department = departmentRepository.findById(request.getDepartment().getId()).orElseThrow(NotFoundException::new);
         Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(request.getDepartment().getId());
         if (request.getIsManager() && manager.isPresent()) throw new BadRequestException();
 
         EmployeeEntity employee = EmployeeEntity.builder()
                 .fullName(request.getFullName())
-                .department(request.getDepartment())
+                .department(department)
                 .isManager(request.getIsManager())
                 .group(request.getGroup())
                 .mainPhoneNumber(request.getMainPhoneNumber())
@@ -66,7 +70,10 @@ public class EmployeeController {
         EmployeeEntity employee = employeeRepository.findById(id).orElseThrow(NotFoundException::new);
 
         if(request.getFullName() != null) employee.setFullName(request.getFullName());
-        if(request.getDepartment() != null) employee.setDepartment(request.getDepartment());
+        if(request.getDepartment() != null) {
+            DepartmentEntity department = departmentRepository.findById(request.getDepartment().getId()).orElseThrow(NotFoundException::new);
+            employee.setDepartment(department);
+        }
         if(request.getIsManager() != null) employee.setIsManager(request.getIsManager());
         if(request.getGroup() != null) employee.setGroup(request.getGroup());
         if(request.getMainPhoneNumber() != null) employee.setMainPhoneNumber(request.getMainPhoneNumber());
