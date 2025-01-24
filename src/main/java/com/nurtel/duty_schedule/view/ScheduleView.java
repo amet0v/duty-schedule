@@ -5,15 +5,17 @@ import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
 
-@Route("/employees")
-public class EmployeeView extends VerticalLayout {
+@Route("schedule")
+@PermitAll
+public class ScheduleView extends VerticalLayout {
 
     @Autowired
-    public EmployeeView(EmployeeRepository employeeRepository) {
+    public ScheduleView(EmployeeRepository employeeRepository) {
 
         Grid<EmployeeEntity> employeeEntityGrid = new Grid<>(EmployeeEntity.class);
         add(employeeEntityGrid);
