@@ -3,13 +3,18 @@ package com.nurtel.duty_schedule.view;
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
+import com.nurtel.duty_schedule.exceptions.BadRequestException;
+import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.schedule.entity.EventTypes;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,17 +86,46 @@ public class ScheduleView extends VerticalLayout {
                 LocalDate currentDate = startDate.plusDays(dayOffset);
                 String columnHeader = currentDate.format(DateTimeFormatter.ofPattern("dd.MM"));
 
-                employeeEntityGrid.addColumn(employee -> {
+                employeeEntityGrid.addColumn(new ComponentRenderer<>(employee -> {
                     Optional<ScheduleEntity> matchingEvent = events.stream()
                             .filter(event -> event.getEmployee().getId().equals(employee.getId()) &&
                                     !currentDate.isBefore(event.getStartDate()) &&
                                     !currentDate.isAfter(event.getEndDate()))
                             .findFirst();
 
-                    if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Duty) return "\uD83D\uDEE0";
-                    else if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Vacation) return "\uD83C\uDFD6";
-                    else return "";
-                }).setHeader(columnHeader);
+                    if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Duty) {
+                        return new Span("\uD83D\uDEE0"); // Для Duty - иконка
+                    } else if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Vacation) {
+                        return new Span("\uD83C\uDFD6"); // Для отпуска - иконка
+                    } else {
+                        Button button = new Button("+");
+                        button.setWidth("30px");
+                        button.getElement().getStyle().set("min-width", "0px"); // Убираем минимальную ширину
+                        button.setHeight("30px");
+                        button.getElement().getStyle().set("font-size", "14px");
+                        button.getElement().getStyle().set("padding", "0");
+                        button.getElement().getStyle().set("margin", "0");
+
+                        button.addClassName("small-button");
+                        button.addClickListener(e -> {
+                            ScheduleEntity duty = ScheduleEntity.builder()
+                                    .employee(employee)
+                                    .startDate(currentDate)
+                                    .endDate(currentDate)
+                                    .event(EventTypes.Duty)
+                                    .build();
+
+                            Optional<ScheduleEntity> checkDuty = scheduleRepository.findDutyByDepartmentAndDate(
+                                    employee.getDepartment().getId(),
+                                    currentDate,
+                                    EventTypes.Duty
+                            );
+                            if (checkDuty.isEmpty()) scheduleRepository.save(duty);
+                            System.out.println("Кнопка нажата!");
+                        });
+                        return button; // Возвращаем кнопку
+                    }
+                })).setHeader(columnHeader).setAutoWidth(true);
             });
 
 //            IntStream.range(0, 31).forEach(dayOffset -> {
