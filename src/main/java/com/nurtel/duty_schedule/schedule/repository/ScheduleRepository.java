@@ -24,6 +24,18 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
             @Param("employeeId") Long employeeId
     );
 
+    @Query("SELECT s FROM ScheduleEntity s WHERE s.employee.id = :employeeId AND :date BETWEEN s.startDate AND s.endDate")
+    Optional<ScheduleEntity> findAllEventsByEmployeeAndDate(
+            @Param("employeeId") Long employeeId,
+            @Param("date") LocalDate date
+    );
+
+    @Query("SELECT e FROM ScheduleEntity e WHERE e.startDate <= :endDate AND e.endDate >= :startDate")
+    List<ScheduleEntity> findAllByDateRange(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     @Query("SELECT s FROM ScheduleEntity s WHERE s.employee.department.id = :departmentId AND :date BETWEEN s.startDate AND s.endDate AND s.event = :eventType")
     Optional<ScheduleEntity> findDutyByDepartmentAndDate(
             @Param("departmentId") Long departmentId,

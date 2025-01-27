@@ -22,6 +22,8 @@ public class ScheduleRequest {
         if (startDate == null) throw new BadRequestException();
         if (employee == null) throw new BadRequestException();
 
+        if(endDate != null && startDate.isAfter(endDate)) throw new BadRequestException();
+
         if (endDate == null) endDate = startDate;
         //if (event == EventTypes.Duty && (startDate != endDate)) throw new BadRequestException();
     }
