@@ -7,9 +7,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
 
-@Route("/employees")
+@Route(value = "/employees", layout = MainLayout.class)
 public class EmployeeView extends VerticalLayout {
 
     @Autowired

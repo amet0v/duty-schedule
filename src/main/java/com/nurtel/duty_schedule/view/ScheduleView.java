@@ -3,7 +3,6 @@ package com.nurtel.duty_schedule.view;
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
-import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
 import com.nurtel.duty_schedule.schedule.entity.EventTypes;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
@@ -12,7 +11,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -20,12 +18,10 @@ import org.springframework.data.domain.Sort;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@Route("schedule")
+@Route(value = "schedule", layout = MainLayout.class)
 @PermitAll
 public class ScheduleView extends VerticalLayout {
 

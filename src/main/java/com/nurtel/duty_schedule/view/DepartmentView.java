@@ -9,12 +9,10 @@ import com.vaadin.flow.router.Route;
 
 import java.util.stream.Collectors;
 
-@Route("/departments")
+@Route(value = "/departments", layout = MainLayout.class)
 public class DepartmentView extends VerticalLayout {
-    private final DepartmentRepository departmentRepository;
 
     public DepartmentView(DepartmentRepository departmentRepository) {
-        this.departmentRepository = departmentRepository;
 
         Grid<DepartmentEntity> departmentEntityGrid = new Grid<>(DepartmentEntity.class);
         add(departmentEntityGrid);
