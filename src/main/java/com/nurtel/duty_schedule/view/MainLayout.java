@@ -40,10 +40,13 @@ public class MainLayout extends AppLayout {
         header.setWidthFull();
         header.setPadding(true);
         header.setSpacing(true);
+
+        header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
         header.getStyle()
                 .set("border-bottom", "1px solid var(--lumo-contrast-10pct)")
                 .set("background-color", "#ef107f")
-                .set("color", "##000000");
+                .set("color", "#000000");
 
         addToNavbar(header);
     }

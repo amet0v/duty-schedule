@@ -12,6 +12,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
@@ -24,6 +25,7 @@ import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -50,36 +52,43 @@ public class ScheduleView extends VerticalLayout {
             employeeEntityGrid.addColumn(EmployeeEntity::getFullName)
                     .setHeader("Сотрудник")
                     .setSortable(true)
-                    .setFrozen(true);
+                    .setFrozen(true)
+                    .setAutoWidth(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getDepartment().getName())
                     .setHeader("Отдел")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setAutoWidth(true);
 
             employeeEntityGrid.addColumn(EmployeeEntity::getGroup)
                     .setHeader("Группа")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setAutoWidth(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getMainPhoneNumber() != null ? employee.getMainPhoneNumber() : "Не указан")
                     .setHeader("Основной телефон")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setAutoWidth(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getAlternativePhoneNumber() != null ? employee.getAlternativePhoneNumber() : "Не указан")
                     .setHeader("Доп. телефон")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setAutoWidth(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getTelegram() != null ? employee.getTelegram() : "Не указан")
                     .setHeader("Telegram")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setAutoWidth(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getIfUnavailable() != null ? employee.getIfUnavailable().getFullName() : "Не указан")
                     .setHeader("Если сотрудник недоступен")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setAutoWidth(true);
 
             LocalDate startDate = LocalDate.now();
             LocalDate endDate = startDate.plusDays(30);
@@ -90,6 +99,10 @@ public class ScheduleView extends VerticalLayout {
                 LocalDate currentDate = startDate.plusDays(dayOffset);
                 String columnHeader = currentDate.format(DateTimeFormatter.ofPattern("dd.MM"));
 
+                boolean isWeekend = currentDate.getDayOfWeek() == DayOfWeek.SATURDAY || currentDate.getDayOfWeek() == DayOfWeek.SUNDAY;
+                if (isWeekend) columnHeader += "\uD83D\uDFE5";
+                else columnHeader += "\uD83D\uDFE6";
+
                 employeeEntityGrid.addColumn(new ComponentRenderer<>(employee -> {
                     Optional<ScheduleEntity> matchingEvent = events.stream()
                             .filter(event -> event.getEmployee().getId().equals(employee.getId()) &&
@@ -99,7 +112,6 @@ public class ScheduleView extends VerticalLayout {
 
                     String dutyIcon = "\uD83D\uDEE0";
                     String vacationIcon = "\uD83C\uDFD6";
-                    String deleteIcon = "\uD83D\uDDD1";
 
                     if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Duty) {
                         Button button = new Button(dutyIcon);
@@ -148,8 +160,6 @@ public class ScheduleView extends VerticalLayout {
                         comboBox.getElement().getStyle().set("margin", "0");
                         comboBox.getElement().getStyle().set("text-align", "center");
                         comboBox.setWidth("50px");
-                        //comboBox.getElement().getStyle().set("line-height", "1");
-                        //comboBox.addClassName("custom-combo-box");
                         comboBox.addValueChangeListener(e -> {
                            ScheduleEntity scheduleEntity;
                            if (e.getValue().equals(dutyIcon)){
@@ -193,6 +203,8 @@ public class ScheduleView extends VerticalLayout {
             });
 
             employeeEntityGrid.setItems(department.getEmployees());
+            employeeEntityGrid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
+            employeeEntityGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);;
 
             Div departmentDiv = new Div();
             departmentDiv.add(departmentHeader, employeeEntityGrid);
