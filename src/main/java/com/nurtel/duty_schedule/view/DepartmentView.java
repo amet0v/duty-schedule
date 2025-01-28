@@ -6,11 +6,13 @@ import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import java.util.stream.Collectors;
 
 @Route(value = "/departments", layout = MainLayout.class)
+@PageTitle("Отделы")
 public class DepartmentView extends VerticalLayout {
 
     public DepartmentView(DepartmentRepository departmentRepository) {
