@@ -104,7 +104,7 @@ public class ScheduleView extends VerticalLayout {
                         button.setWidth("50px");
                         button.getElement().getStyle().set("min-width", "0px"); // Убираем минимальную ширину
                         button.setHeight("30px");
-                        button.getElement().getStyle().set("font-size", "14px");
+                        button.getElement().getStyle().set("font-size", "20px");
                         button.getElement().getStyle().set("padding", "0");
                         button.getElement().getStyle().set("margin", "0");
 
@@ -123,7 +123,7 @@ public class ScheduleView extends VerticalLayout {
                         button.setWidth("50px");
                         button.getElement().getStyle().set("min-width", "0px"); // Убираем минимальную ширину
                         button.setHeight("30px");
-                        button.getElement().getStyle().set("font-size", "14px");
+                        button.getElement().getStyle().set("font-size", "20px");
                         button.getElement().getStyle().set("padding", "0");
                         button.getElement().getStyle().set("margin", "0");
 

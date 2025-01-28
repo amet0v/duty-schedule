@@ -52,6 +52,11 @@ public class EmployeeView extends VerticalLayout {
                 .setHeader("Если сотрудник недоступен")
                 .setSortable(true);
 
+        employeeEntityGrid.addColumn(employee ->
+                        employee.getIsManager() ? "Да" : "Нет")
+                .setHeader("Руководитель?")
+                .setSortable(true);
+
         employeeEntityGrid.setItems(employeeRepository.findAll(
                 Sort.by(Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
         ));

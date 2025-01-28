@@ -9,6 +9,8 @@ import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.routes.BaseRoutes;
+import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
+import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,7 @@ import java.util.Optional;
 public class EmployeeController {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    private final ScheduleRepository scheduleRepository;
 
     @GetMapping(BaseRoutes.EMPLOYEE_BY_ID)
     public EmployeeResponse getEmployee(@PathVariable Long id) throws NotFoundException {
@@ -104,6 +107,8 @@ public class EmployeeController {
     public String deleteEmployee(@PathVariable Long id) throws NotFoundException {
         //EmployeeEntity employee = employeeRepository.findById(id).orElseThrow(NotFoundException::new);
         employeeRepository.deleteById(id);
+        List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(id);
+        scheduleRepository.deleteAll(scheduleEntityList);
         return HttpStatus.OK.name();
     }
 }
