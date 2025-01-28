@@ -15,6 +15,8 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
@@ -163,6 +165,14 @@ public class ScheduleView extends VerticalLayout {
                                        EventTypes.Duty
                                );
                                if (checkDuty.isEmpty()) scheduleRepository.save(scheduleEntity);
+                               else {
+                                   Notification notification = Notification.show("На эту дату уже назначен дежурный");
+                                   notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                                   notification.setPosition(Notification.Position.MIDDLE);
+                                   events.clear();
+                                   events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
+                                   employeeEntityGrid.getDataProvider().refreshAll();
+                               }
                            }
                            else {
                                scheduleEntity = ScheduleEntity.builder()
@@ -176,7 +186,6 @@ public class ScheduleView extends VerticalLayout {
                            events.clear();
                            events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
                            employeeEntityGrid.getDataProvider().refreshAll();
-                            //comboBox.clear();
                         });
                         return comboBox;
                     }
