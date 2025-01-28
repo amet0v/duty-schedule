@@ -9,6 +9,8 @@ import com.nurtel.duty_schedule.schedule.entity.EventTypes;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
@@ -93,57 +95,93 @@ public class ScheduleView extends VerticalLayout {
                                     !currentDate.isAfter(event.getEndDate()))
                             .findFirst();
 
+                    String dutyIcon = "\uD83D\uDEE0";
+                    String vacationIcon = "\uD83C\uDFD6";
+                    String deleteIcon = "\uD83D\uDDD1";
+
                     if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Duty) {
-                        return new Span("\uD83D\uDEE0"); // Для Duty - иконка
-                    } else if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Vacation) {
-                        return new Span("\uD83C\uDFD6"); // Для отпуска - иконка
-                    } else {
-                        Button button = new Button("+");
-                        button.setWidth("30px");
+                        Button button = new Button(dutyIcon);
+                        button.setWidth("50px");
                         button.getElement().getStyle().set("min-width", "0px"); // Убираем минимальную ширину
                         button.setHeight("30px");
                         button.getElement().getStyle().set("font-size", "14px");
                         button.getElement().getStyle().set("padding", "0");
                         button.getElement().getStyle().set("margin", "0");
 
-                        button.addClassName("small-button");
                         button.addClickListener(e -> {
-                            ScheduleEntity duty = ScheduleEntity.builder()
-                                    .employee(employee)
-                                    .startDate(currentDate)
-                                    .endDate(currentDate)
-                                    .event(EventTypes.Duty)
-                                    .build();
-
-                            Optional<ScheduleEntity> checkDuty = scheduleRepository.findDutyByDepartmentAndDate(
-                                    employee.getDepartment().getId(),
-                                    currentDate,
-                                    EventTypes.Duty
+                            Optional<ScheduleEntity> duty = scheduleRepository.findAllEventsByEmployeeAndDate(
+                                    employee.getId(), currentDate
                             );
-                            if (checkDuty.isEmpty()) scheduleRepository.save(duty);
-                            System.out.println("Кнопка нажата!");
+                            duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
+                            events.clear();
+                            events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
+                            employeeEntityGrid.getDataProvider().refreshAll();
                         });
-                        return button; // Возвращаем кнопку
+                        return button;
+                    } else if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Vacation) {
+                        Button button = new Button(vacationIcon);
+                        button.setWidth("50px");
+                        button.getElement().getStyle().set("min-width", "0px"); // Убираем минимальную ширину
+                        button.setHeight("30px");
+                        button.getElement().getStyle().set("font-size", "14px");
+                        button.getElement().getStyle().set("padding", "0");
+                        button.getElement().getStyle().set("margin", "0");
+
+                        button.addClickListener(e -> {
+                            Optional<ScheduleEntity> duty = scheduleRepository.findAllEventsByEmployeeAndDate(
+                                    employee.getId(), currentDate
+                            );
+                            duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
+                            events.clear();
+                            events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
+                            employeeEntityGrid.getDataProvider().refreshAll();
+                        });
+                        return button;
+                    } else {
+                        ComboBox<String> comboBox = new ComboBox<>();
+                        comboBox.setItems(dutyIcon, vacationIcon);
+                        comboBox.setPlaceholder("+");
+                        comboBox.getElement().getStyle().set("font-size", "14px");
+                        comboBox.getElement().getStyle().set("padding", "0");
+                        comboBox.getElement().getStyle().set("margin", "0");
+                        comboBox.getElement().getStyle().set("text-align", "center");
+                        comboBox.setWidth("50px");
+                        //comboBox.getElement().getStyle().set("line-height", "1");
+                        //comboBox.addClassName("custom-combo-box");
+                        comboBox.addValueChangeListener(e -> {
+                           ScheduleEntity scheduleEntity;
+                           if (e.getValue().equals(dutyIcon)){
+                               scheduleEntity = ScheduleEntity.builder()
+                                       .employee(employee)
+                                       .startDate(currentDate)
+                                       .endDate(currentDate)
+                                       .event(EventTypes.Duty)
+                                       .build();
+                               Optional<ScheduleEntity> checkDuty = scheduleRepository.findDutyByDepartmentAndDate(
+                                       employee.getDepartment().getId(),
+                                       currentDate,
+                                       EventTypes.Duty
+                               );
+                               if (checkDuty.isEmpty()) scheduleRepository.save(scheduleEntity);
+                           }
+                           else {
+                               scheduleEntity = ScheduleEntity.builder()
+                                       .employee(employee)
+                                       .startDate(currentDate)
+                                       .endDate(currentDate)
+                                       .event(EventTypes.Vacation)
+                                       .build();
+                               scheduleRepository.save(scheduleEntity);
+                           }
+                           events.clear();
+                           events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
+                           employeeEntityGrid.getDataProvider().refreshAll();
+                            //comboBox.clear();
+                        });
+                        return comboBox;
                     }
                 })).setHeader(columnHeader).setAutoWidth(true);
             });
-
-//            IntStream.range(0, 31).forEach(dayOffset -> {
-//                LocalDate currentDate = LocalDate.now().plusDays(dayOffset);
-//                String columnHeader = currentDate.format(DateTimeFormatter.ofPattern("dd.MM")); // Заголовок столбца — дата
-//
-//
-//
-//                employeeEntityGrid.addColumn(employee -> {
-//                    Optional<ScheduleEntity> event = scheduleRepository.findAllEventsByEmployeeAndDate(
-//                            employee.getId(),
-//                            currentDate
-//                    );
-//                    if (event.isPresent() && event.get().getEvent() == EventTypes.Duty) return "\uD83D\uDEE0";
-//                    else if (event.isPresent() && event.get().getEvent() == EventTypes.Vacation) return "\uD83C\uDFD6";
-//                    else return "";
-//                }).setHeader(columnHeader);
-//            });
 
             employeeEntityGrid.setItems(department.getEmployees());
 

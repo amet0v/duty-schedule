@@ -1,5 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 
-::part(loading-overlay) {
-    display: none !important;
+.custom-combo-box::part(item) {
+    padding-left: 0; /* Убираем отступ слева у элементов выпадающего списка */
+    text-align: center; /* Центрируем содержимое (опционально) */
+}
+
+.custom-combo-box::part(input-field) {
+    padding-left: 0; /* Убираем отступ слева у поля ввода */
+    text-align: center; /* Центрируем текст в поле ввода */
 }

@@ -72,6 +72,11 @@ public class ScheduleController {
                 request.getStartDate(),
                 EventTypes.Duty
         );
+        if (duty.isPresent() && request.getEvent() == EventTypes.Duty) throw new BadRequestException();
+
+        duty = scheduleRepository.findAllEventsByEmployeeAndDate(
+                employee.getId(), request.getStartDate()
+        );
         if (duty.isPresent()) throw new BadRequestException();
 
         ScheduleEntity schedule = ScheduleEntity.builder()
