@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,7 @@ public class ScheduleController {
 
         if (duty.isEmpty()) {
             List<EmployeeEntity> employees = employeeRepository.findDutyByDepartmentIdOrderByLastCallDateAsc(departmentId);
+            employees.sort(Comparator.comparing(EmployeeEntity::getLastCallDate, Comparator.nullsFirst(Comparator.naturalOrder())));
             employee = employees.getFirst();
         }else {
             employee = duty.get().getEmployee();
