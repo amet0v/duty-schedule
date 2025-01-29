@@ -18,8 +18,9 @@ public class EmployeeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
     protected String fullName;
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "department_id", nullable = false)
+    @ManyToOne
+            //(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "department_id", nullable = true)
     protected DepartmentEntity department;
     protected Boolean isManager;
     @Column(name = "employee_group")
@@ -27,10 +28,13 @@ public class EmployeeEntity {
     protected String mainPhoneNumber;
     protected String alternativePhoneNumber;
     protected String telegram;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
+            //(cascade = CascadeType.ALL)
     @JoinColumn(name = "if_unavailable_id",  nullable = true)
     protected EmployeeEntity ifUnavailable;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
+            //(cascade = CascadeType.MERGE)
+            //(cascade = CascadeType.ALL)
     @JoinColumn(name = "manager_id",  nullable = true)
     protected EmployeeEntity manager;
     protected Date lastCallDate;

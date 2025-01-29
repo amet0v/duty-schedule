@@ -13,6 +13,7 @@ import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -87,7 +88,6 @@ public class EmployeeController {
             employee.setIfUnavailable(ifUnavailable);
         }
 
-
         Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(employee.getDepartment().getId());
         if (request.getIsManager() && manager.isPresent() && !Objects.equals(manager.get().getId(), employee.getId())){
             throw new BadRequestException();
@@ -103,12 +103,27 @@ public class EmployeeController {
         return EmployeeResponse.of(employee);
     }
 
+    @Transactional
     @DeleteMapping(BaseRoutes.EMPLOYEE_BY_ID)
     public String deleteEmployee(@PathVariable Long id) throws NotFoundException {
-        //EmployeeEntity employee = employeeRepository.findById(id).orElseThrow(NotFoundException::new);
-        employeeRepository.deleteById(id);
+        EmployeeEntity employeeToDelete = employeeRepository.findById(id)
+                .orElseThrow(NotFoundException::new);
+
+        List<EmployeeEntity> employees = employeeRepository.findAll();
+        for (EmployeeEntity employee : employees) {
+            if (employee.getManager() != null && employee.getManager().getId().equals(id)) {
+                employee.setManager(null);
+            }
+            if (employee.getIfUnavailable() != null && employee.getIfUnavailable().getId().equals(id)) {
+                employee.setIfUnavailable(null);
+            }
+        }
+        employeeRepository.saveAll(employees);
+
         List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(id);
         scheduleRepository.deleteAll(scheduleEntityList);
+        employeeRepository.deleteById(id);
+
         return HttpStatus.OK.name();
     }
 }

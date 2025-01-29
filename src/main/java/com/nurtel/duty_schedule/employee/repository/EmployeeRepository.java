@@ -16,4 +16,7 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, Long> 
 
     @Query("SELECT e FROM EmployeeEntity e WHERE e.department.id = :departmentId AND e.isManager = true")
     Optional<EmployeeEntity> findManagerByDepartmentId(@Param("departmentId") Long departmentId);
+
+    @Query("SELECT e FROM EmployeeEntity e WHERE e.department.id = :departmentId")
+    List<EmployeeEntity> findAllByDepartment(@Param("departmentId") Long departmentId);
 }

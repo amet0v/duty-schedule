@@ -3,19 +3,15 @@ package com.nurtel.duty_schedule.view;
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
-import com.nurtel.duty_schedule.exceptions.BadRequestException;
-import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.schedule.entity.EventTypes;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -204,7 +200,13 @@ public class ScheduleView extends VerticalLayout {
                 })).setHeader(columnHeader).setAutoWidth(true);
             });
 
-            employeeEntityGrid.setItems(department.getEmployees());
+            List<EmployeeEntity> sortedEmployees = department.getEmployees().stream()
+                    .sorted((e1, e2) -> Boolean.compare(e2.getIsManager(), e1.getIsManager())) // Сначала с менеджером
+                    .toList();
+
+            employeeEntityGrid.setItems(sortedEmployees);
+
+            //employeeEntityGrid.setItems(department.getEmployees());
             employeeEntityGrid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
             employeeEntityGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);;
 
