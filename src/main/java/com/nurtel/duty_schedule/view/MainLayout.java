@@ -19,6 +19,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.SessionDestroyListener;
 import com.vaadin.flow.server.SessionInitListener;
@@ -46,7 +47,7 @@ public class MainLayout extends AppLayout {
         });
     }
 
-    private Optional<UserEntity> authenticate(UserRepository userRepository, String username, String password){
+    private Optional<UserEntity> authenticate(UserRepository userRepository, String username, String password) {
         Optional<UserEntity> user = userRepository.findByUsername(username);
         if (user.isPresent()) {
             if (passwordEncoder.matches(password, user.get().getPassword())) return user;
@@ -85,16 +86,16 @@ public class MainLayout extends AppLayout {
 
         Dialog loginDialog = new Dialog();
         loginDialog.setHeaderTitle("Вход в систему");
-        TextField loginField = new TextField("Логин");
-        TextField passwordField = new TextField("Пароль");
+        TextField usernameField = new TextField("Логин");
+        PasswordField passwordField = new PasswordField("Пароль");
 
         VerticalLayout loginDialogLayout = new VerticalLayout();
-        loginDialogLayout.add(loginField, passwordField);
-        
+        loginDialogLayout.add(usernameField, passwordField);
+
         loginDialog.add(loginDialogLayout);
 
         Button dialogLoginButton = new Button("Войти", e -> {
-            String username = loginField.getValue();
+            String username = usernameField.getValue();
             String password = passwordField.getValue();
 
             Optional<UserEntity> user = authenticate(userRepository, username, password);
@@ -113,36 +114,60 @@ public class MainLayout extends AppLayout {
             }
         });
 
-        Button dialogCncelButton = new Button("Отмена", e -> loginDialog.close());
-        dialogCncelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        Button loginDialogCancelButton = new Button("Отмена", e -> loginDialog.close());
+        loginDialogCancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
-        loginDialog.getFooter().add(dialogLoginButton, dialogCncelButton);
+        loginDialog.getFooter().add(dialogLoginButton, loginDialogCancelButton);
 
         loginButton = new Button("Войти", e -> {
-            loginField.clear();
+            usernameField.clear();
             passwordField.clear();
             loginDialog.open();
         });
         loginButton.setVisible(!isAuthenticated);
         loginButton.getStyle()
-                .set("background-color" , "#ff2898")
+                .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
 
 
-        Button logoutButton = new Button("Выйти", VaadinIcon.POWER_OFF.create() ,e -> {
+        Button logoutButton = new Button("Выйти", VaadinIcon.POWER_OFF.create(), e -> {
             VaadinSession.getCurrent().getSession().invalidate();
             VaadinSession.getCurrent().close();
             Notification.show("Вы вышли из учетной записи", 3000, Notification.Position.BOTTOM_END);
             updateButtonsVisibility();
         });
-
         logoutButton.getStyle()
-                .set("background-color" , "#ff2898")
+                .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
+
+        Dialog createUserDialog = new Dialog();
+        TextField newUserUsernameField = new TextField();
+        PasswordField newUserPasswordField = new PasswordField();
+
+        VerticalLayout createUserLayout = new VerticalLayout();
+        createUserLayout.add(newUserUsernameField, newUserPasswordField);
+
+        Button createUserDialogButton = new Button("Создать", e -> {
+            Optional<UserEntity> checkUser = userRepository.findByUsername(newUserUsernameField.getValue());
+            if (checkUser.isEmpty()) {
+                UserEntity newUser = UserEntity.builder()
+                        .username(newUserUsernameField.getValue())
+                        .password(passwordEncoder.encode(newUserPasswordField.getValue()))
+                        .build();
+                userRepository.save(newUser);
+            } else {
+                Notification.show("Пользователь с таким логином уже существует", 5000, Notification.Position.BOTTOM_END)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+        Button createUserDialogCancelButton = new Button("Отмена", e -> loginDialog.close());
+        createUserDialogCancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+
+        createUserDialog.getFooter().add(createUserDialogButton, createUserDialogCancelButton);
 
         Button addUserButton = new Button("add user", VaadinIcon.CLIPBOARD_USER.create());
         addUserButton.getStyle()
-                .set("background-color" , "#ffffff")
+                .set("background-color", "#ffffff")
                 .set("color", "#000000");
 
         logoutBar = new MenuBar();
@@ -151,7 +176,7 @@ public class MainLayout extends AppLayout {
         MenuItem usernameItem = logoutBar.addItem(userIcon);
         usernameItem.add("username");
         usernameItem.getStyle()
-                .set("background-color" , "#ff2898")
+                .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
 
         usernameItem.getSubMenu().addItem(addUserButton);
@@ -159,7 +184,7 @@ public class MainLayout extends AppLayout {
         usernameItem.getSubMenu().addItem(logoutButton);
         logoutBar.setVisible(isAuthenticated);
         logoutBar.getStyle()
-                .set("background-color" , "#ff2898")
+                .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
 
         HorizontalLayout header = new HorizontalLayout(logo, loginButton, logoutBar);
@@ -197,7 +222,7 @@ public class MainLayout extends AppLayout {
 
         List<SideNavItem> sideNavItems = List.of(departmentItem, employeeItem, scheduleItem);
 
-        for (SideNavItem item : sideNavItems){
+        for (SideNavItem item : sideNavItems) {
             item.getStyle()
                     .set("color", "#b8c7ce")
                     .set("font-size", "14px")

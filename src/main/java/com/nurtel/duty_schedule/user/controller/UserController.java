@@ -32,26 +32,25 @@ public class UserController {
     private String initPassword;
 
     @GetMapping(BaseRoutes.NOT_SECURED_INIT)
-    public UserResponse init(){
+    public UserResponse init() {
         Optional<UserEntity> checkUser = userRepository.findByUsername(initUsername);
         UserEntity user;
 
-        if (checkUser.isEmpty()){
+        if (checkUser.isEmpty()) {
             user = UserEntity.builder()
                     .username(initUsername)
                     .password(passwordEncoder.encode(initPassword))
                     .build();
 
             userRepository.save(user);
-        }
-        else {
+        } else {
             user = checkUser.get();
         }
         return UserResponse.of(user);
     }
 
     @GetMapping(BaseRoutes.USERS)
-    public List<UserResponse> getUsers(){
+    public List<UserResponse> getUsers() {
         return userRepository.findAll().stream().map(UserResponse::of).collect(Collectors.toList());
     }
 
@@ -63,7 +62,8 @@ public class UserController {
     @PostMapping(BaseRoutes.USERS)
     public UserResponse createUser(@RequestBody UserRequest request) throws BadRequestException {
         request.validate();
-
+        Optional<UserEntity> checkUser = userRepository.findByUsername(request.getUsername());
+        if (checkUser.isPresent()) throw new BadRequestException();
         UserEntity user = UserEntity.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
