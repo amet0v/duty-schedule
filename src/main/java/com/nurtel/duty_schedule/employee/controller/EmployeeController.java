@@ -113,12 +113,13 @@ public class EmployeeController {
         List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(employeeToDelete.getId());
         scheduleRepository.deleteAll(scheduleEntityList);
 
-        if (employeeToDelete.getIsManager()) {
-            List<EmployeeEntity> employees = employeeRepository.findAll();
-            for (EmployeeEntity employeeEntity : employees) {
-                employeeEntity.setManager(null);
-            }
+        List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employeeToDelete.getDepartment().getId());
+        for (EmployeeEntity entity : employees) {
+            if (employeeToDelete.getIsManager()) entity.setManager(null);
+            if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == employeeToDelete.getId())
+                entity.setIfUnavailable(null);
         }
+        employeeRepository.saveAll(employees);
         employeeToDelete.setIfUnavailable(null);
         employeeToDelete.setManager(null);
         employeeToDelete.setDepartment(null);

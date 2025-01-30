@@ -24,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Route(value = "/employees", layout = MainLayout.class)
@@ -181,6 +182,8 @@ public class EmployeeView extends VerticalLayout {
                     grid.setItems(employeeRepository.findAll(
                             Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
                     ));
+                    ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
+                    ifUnavailableComboBox.clear();
                     //dialog.close();
                 }
             } else {
@@ -232,12 +235,15 @@ public class EmployeeView extends VerticalLayout {
             if (selectedEmployee != null) {
                 List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(selectedEmployee.getId());
                 scheduleRepository.deleteAll(scheduleEntityList);
-                if (selectedEmployee.getIsManager()){
-                    List <EmployeeEntity> employees = employeeRepository.findAll();
-                    for (EmployeeEntity employeeEntity : employees){
-                        employeeEntity.setManager(null);
-                    }
+
+                List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(selectedEmployee.getDepartment().getId());
+                for (EmployeeEntity entity : employees) {
+                    if (selectedEmployee.getIsManager()) entity.setManager(null);
+                    if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == selectedEmployee.getId())
+                        entity.setIfUnavailable(null);
                 }
+                employeeRepository.saveAll(employees);
+
                 selectedEmployee.setIfUnavailable(null);
                 selectedEmployee.setManager(null);
                 selectedEmployee.setDepartment(null);
