@@ -18,7 +18,7 @@ public class EmployeeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
     protected String fullName;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
             //(cascade = CascadeType.MERGE)
     @JoinColumn(name = "department_id", nullable = true)
     protected DepartmentEntity department;

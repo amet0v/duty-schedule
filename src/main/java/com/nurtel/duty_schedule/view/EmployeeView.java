@@ -21,6 +21,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -142,8 +143,9 @@ public class EmployeeView extends VerticalLayout {
         });
 
         Button addButton = new Button("Добавить", e -> {
-            DepartmentEntity selectedDepartment = departmentRepository.findById(departmentComboBox.getValue().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Отдел не найден"));
+//            DepartmentEntity selectedDepartment = departmentRepository.findById(departmentComboBox.getValue().getId())
+//                    .orElseThrow(() -> new IllegalArgumentException("Отдел не найден"));
+            DepartmentEntity selectedDepartment = departmentComboBox.getValue();
             if (selectedDepartment != null && !fullNameField.isEmpty()) {
                 EmployeeEntity employee = EmployeeEntity.builder()
                         .fullName(fullNameField.getValue())
@@ -173,14 +175,13 @@ public class EmployeeView extends VerticalLayout {
                     } else if (!isManagerCheckbox.getValue() && manager.isPresent()) {
                         employee.setManager(manager.get());
                         employeeRepository.save(employee);
-                    }
-                    else if (!isManagerCheckbox.getValue() && manager.isEmpty()) {
+                    } else if (!isManagerCheckbox.getValue() && manager.isEmpty()) {
                         employeeRepository.save(employee);
                     }
                     grid.setItems(employeeRepository.findAll(
                             Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
                     ));
-                    dialog.close();
+                    //dialog.close();
                 }
             } else {
                 Notification.show("Заполните все обязательные поля", 5000, Notification.Position.BOTTOM_END)
@@ -211,6 +212,7 @@ public class EmployeeView extends VerticalLayout {
         return addEmployeeButton;
     }
 
+    @Transactional
     private Button deleteEmployeeButton(EmployeeRepository employeeRepository,
                                         Grid<EmployeeEntity> grid,
                                         ScheduleRepository scheduleRepository) {
@@ -230,15 +232,24 @@ public class EmployeeView extends VerticalLayout {
             if (selectedEmployee != null) {
                 List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(selectedEmployee.getId());
                 scheduleRepository.deleteAll(scheduleEntityList);
+                if (selectedEmployee.getIsManager()){
+                    List <EmployeeEntity> employees = employeeRepository.findAll();
+                    for (EmployeeEntity employeeEntity : employees){
+                        employeeEntity.setManager(null);
+                    }
+                }
+                selectedEmployee.setIfUnavailable(null);
+                selectedEmployee.setManager(null);
                 selectedEmployee.setDepartment(null);
 
+                employeeRepository.save(selectedEmployee);
                 employeeRepository.delete(selectedEmployee);
 
                 grid.setItems(employeeRepository.findAll(
                         Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
                 ));
                 employeeComboBox.setItems(employeeRepository.findAll());
-                dialog.close();
+                //dialog.close();
             } else {
                 Notification.show("Выберите сотрудника для удаления", 5000, Notification.Position.BOTTOM_END)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);

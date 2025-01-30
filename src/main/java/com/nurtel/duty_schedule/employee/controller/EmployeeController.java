@@ -57,9 +57,9 @@ public class EmployeeController {
                 .manager(manager.orElse(null))
                 .build();
 
-        if (manager.isEmpty() && request.getIsManager()){
+        if (manager.isEmpty() && request.getIsManager()) {
             List<EmployeeEntity> employees = employeeRepository.findAll();
-            for (EmployeeEntity e : employees){
+            for (EmployeeEntity e : employees) {
                 e.setManager(employee);
                 employeeRepository.save(e);
             }
@@ -73,28 +73,29 @@ public class EmployeeController {
             throws BadRequestException, NotFoundException {
         EmployeeEntity employee = employeeRepository.findById(id).orElseThrow(NotFoundException::new);
 
-        if(request.getFullName() != null) employee.setFullName(request.getFullName());
-        if(request.getDepartment() != null) {
+        if (request.getFullName() != null) employee.setFullName(request.getFullName());
+        if (request.getDepartment() != null) {
             DepartmentEntity department = departmentRepository.findById(request.getDepartment().getId()).orElseThrow(NotFoundException::new);
             employee.setDepartment(department);
         }
-        if(request.getIsManager() != null) employee.setIsManager(request.getIsManager());
-        if(request.getGroup() != null) employee.setGroup(request.getGroup());
-        if(request.getMainPhoneNumber() != null) employee.setMainPhoneNumber(request.getMainPhoneNumber());
-        if(request.getAlternativePhoneNumber() != null) employee.setAlternativePhoneNumber(request.getAlternativePhoneNumber());
-        if(request.getTelegram() != null) employee.setTelegram(request.getTelegram());
-        if(request.getIfUnavailable() != null){
+        if (request.getIsManager() != null) employee.setIsManager(request.getIsManager());
+        if (request.getGroup() != null) employee.setGroup(request.getGroup());
+        if (request.getMainPhoneNumber() != null) employee.setMainPhoneNumber(request.getMainPhoneNumber());
+        if (request.getAlternativePhoneNumber() != null)
+            employee.setAlternativePhoneNumber(request.getAlternativePhoneNumber());
+        if (request.getTelegram() != null) employee.setTelegram(request.getTelegram());
+        if (request.getIfUnavailable() != null) {
             EmployeeEntity ifUnavailable = employeeRepository.findById(request.getIfUnavailable().getId()).orElseThrow(NotFoundException::new);
             employee.setIfUnavailable(ifUnavailable);
         }
 
         Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(employee.getDepartment().getId());
-        if (request.getIsManager() && manager.isPresent() && !Objects.equals(manager.get().getId(), employee.getId())){
+        if (request.getIsManager() && manager.isPresent() && !Objects.equals(manager.get().getId(), employee.getId())) {
             throw new BadRequestException();
         }
-        if (manager.isEmpty() && request.getIsManager()){
+        if (manager.isEmpty() && request.getIsManager()) {
             List<EmployeeEntity> employees = employeeRepository.findAll();
-            for (EmployeeEntity e : employees){
+            for (EmployeeEntity e : employees) {
                 if (!Objects.equals(e.getId(), id)) e.setManager(employee);
                 employeeRepository.save(e);
             }
@@ -109,20 +110,21 @@ public class EmployeeController {
         EmployeeEntity employeeToDelete = employeeRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
 
-        List<EmployeeEntity> employees = employeeRepository.findAll();
-        for (EmployeeEntity employee : employees) {
-            if (employee.getManager() != null && employee.getManager().getId().equals(id)) {
-                employee.setManager(null);
-            }
-            if (employee.getIfUnavailable() != null && employee.getIfUnavailable().getId().equals(id)) {
-                employee.setIfUnavailable(null);
+        List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(employeeToDelete.getId());
+        scheduleRepository.deleteAll(scheduleEntityList);
+
+        if (employeeToDelete.getIsManager()) {
+            List<EmployeeEntity> employees = employeeRepository.findAll();
+            for (EmployeeEntity employeeEntity : employees) {
+                employeeEntity.setManager(null);
             }
         }
-        employeeRepository.saveAll(employees);
+        employeeToDelete.setIfUnavailable(null);
+        employeeToDelete.setManager(null);
+        employeeToDelete.setDepartment(null);
 
-        List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(id);
-        scheduleRepository.deleteAll(scheduleEntityList);
-        employeeRepository.deleteById(id);
+        employeeRepository.save(employeeToDelete);
+        employeeRepository.delete(employeeToDelete);
 
         return HttpStatus.OK.name();
     }
