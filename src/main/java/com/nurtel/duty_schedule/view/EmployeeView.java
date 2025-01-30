@@ -41,9 +41,10 @@ public class EmployeeView extends VerticalLayout {
 
         Button deleteButton = deleteEmployeeButton(employeeRepository, employeeEntityGrid, scheduleRepository);
         Button addButton = addEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
+        Button editbutton = editEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
-        horizontalLayout.add(addButton, deleteButton);
+        horizontalLayout.add(addButton, editbutton, deleteButton);
         add(horizontalLayout);
 
         add(employeeEntityGrid);
@@ -102,9 +103,11 @@ public class EmployeeView extends VerticalLayout {
         ));
     }
 
-    private Button addEmployeeButton(EmployeeRepository employeeRepository,
-                                     Grid<EmployeeEntity> grid,
-                                     DepartmentRepository departmentRepository) {
+    private Button addEmployeeButton(
+            EmployeeRepository employeeRepository,
+            Grid<EmployeeEntity> grid,
+            DepartmentRepository departmentRepository
+    ) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Добавить сотрудника");
 
@@ -213,6 +216,150 @@ public class EmployeeView extends VerticalLayout {
         add(dialog);
 
         return addEmployeeButton;
+    }
+
+    private Button editEmployeeButton(
+            EmployeeRepository employeeRepository,
+            Grid<EmployeeEntity> grid,
+            DepartmentRepository departmentRepository
+    ) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Редактировать сотрудника");
+
+        VerticalLayout dialogLayout = new VerticalLayout();
+        dialog.add(dialogLayout);
+
+        ComboBox<EmployeeEntity> employeeComboBox = new ComboBox<>("Сотрудник");
+        employeeComboBox.setItems(employeeRepository.findAll());
+        employeeComboBox.setItemLabelGenerator(EmployeeEntity::getFullName);
+
+        TextField fullNameField = new TextField("Фамилия Имя");
+        ComboBox<DepartmentEntity> departmentComboBox = new ComboBox<>("Отдел");
+        departmentComboBox.setItems(departmentRepository.findAll());
+        departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
+        Checkbox isManagerCheckbox = new Checkbox("Руководитель?");
+        TextField groupField = new TextField("Группа");
+        TextField mainPhoneNumberField = new TextField("Основной тел. номер");
+        TextField altPhoneNumberField = new TextField("Альтернативный тел. номер");
+        TextField telegramField = new TextField("Телеграм");
+        ComboBox<EmployeeEntity> ifUnavailableComboBox = new ComboBox<>("Если недоступен");
+
+        dialogLayout.add(
+                employeeComboBox,
+                fullNameField,
+                departmentComboBox,
+                isManagerCheckbox,
+                groupField,
+                mainPhoneNumberField,
+                altPhoneNumberField,
+                telegramField,
+                ifUnavailableComboBox
+        );
+
+        employeeComboBox.addValueChangeListener(event -> {
+            EmployeeEntity selectedEmployee = event.getValue();
+            if (selectedEmployee != null) {
+                fullNameField.setValue(selectedEmployee.getFullName());
+                departmentComboBox.setValue(selectedEmployee.getDepartment());
+                isManagerCheckbox.setValue(selectedEmployee.getIsManager());
+                groupField.setValue(selectedEmployee.getGroup());
+                mainPhoneNumberField.setValue(selectedEmployee.getMainPhoneNumber());
+                altPhoneNumberField.setValue(selectedEmployee.getAlternativePhoneNumber());
+                telegramField.setValue(selectedEmployee.getTelegram());
+                ifUnavailableComboBox.setValue(selectedEmployee.getIfUnavailable());
+            } else {
+                employeeComboBox.clear();
+                fullNameField.clear();
+                departmentComboBox.clear();
+                isManagerCheckbox.clear();
+                groupField.clear();
+                mainPhoneNumberField.clear();
+                altPhoneNumberField.clear();
+                telegramField.clear();
+                ifUnavailableComboBox.clear();
+            }
+        });
+
+        departmentComboBox.addValueChangeListener(event -> {
+            DepartmentEntity selectedDepartment = event.getValue();
+            if (selectedDepartment != null) {
+                ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
+            } else {
+                ifUnavailableComboBox.clear();
+                ifUnavailableComboBox.setItems();
+            }
+        });
+
+        Button editButton = new Button("Редактировать", e -> {
+            EmployeeEntity selectedEmployee = employeeComboBox.getValue();
+            DepartmentEntity selectedDepartment = departmentComboBox.getValue();
+            if (selectedEmployee != null && selectedDepartment != null && !fullNameField.isEmpty()) {
+                if (selectedDepartment != selectedEmployee.getDepartment()) {
+                    selectedEmployee.setIfUnavailable(null);
+                    selectedEmployee.setManager(null);
+                    selectedEmployee.setDepartment(selectedDepartment);
+//                    Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(selectedDepartment.getId());
+//                    manager.ifPresent(selectedEmployee::setManager);
+                }
+
+                selectedEmployee.setFullName(fullNameField.getValue());
+                selectedEmployee.setIsManager(isManagerCheckbox.getValue());
+                selectedEmployee.setGroup(groupField.getValue());
+                selectedEmployee.setMainPhoneNumber(mainPhoneNumberField.getValue());
+                selectedEmployee.setAlternativePhoneNumber(altPhoneNumberField.getValue());
+                selectedEmployee.setTelegram(telegramField.getValue());
+                selectedEmployee.setIfUnavailable(ifUnavailableComboBox.getValue());
+
+                Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(selectedDepartment.getId());
+                if (isManagerCheckbox.getValue() && manager.isPresent()) {
+                    Notification.show("У этого отдела уже есть руководитель", 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                } else {
+                    if (isManagerCheckbox.getValue() && manager.isEmpty()) {
+                        //employee = employeeRepository.save(employee);
+                        selectedEmployee.setIsManager(isManagerCheckbox.getValue());
+                        employeeRepository.save(selectedEmployee);
+
+                        List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(selectedDepartment.getId());
+                        for (EmployeeEntity employeeEntity : employees) {
+                            employeeEntity.setManager(selectedEmployee);
+                        }
+                        employeeRepository.saveAll(employees);
+
+                    } else if (!isManagerCheckbox.getValue() && manager.isPresent()) {
+                        selectedEmployee.setManager(manager.get());
+                        employeeRepository.save(selectedEmployee);
+                    } else if (!isManagerCheckbox.getValue() && manager.isEmpty()) {
+                        employeeRepository.save(selectedEmployee);
+                    }
+                    grid.setItems(employeeRepository.findAll(
+                            Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
+                    ));
+                    ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
+                    ifUnavailableComboBox.clear();
+                    //dialog.close();
+                }
+            } else {
+                Notification.show("Заполните все обязательные поля", 5000, Notification.Position.BOTTOM_END)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+        editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Отмена", e -> dialog.close());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        dialog.getFooter().add(editButton, cancelButton);
+
+        Button editEmployeeButton = new Button("Редактировать", e -> {
+            employeeComboBox.clear();
+            employeeComboBox.setItems(employeeRepository.findAll());
+            dialog.open();
+        });
+        editEmployeeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        add(dialog);
+
+        return editEmployeeButton;
     }
 
     @Transactional

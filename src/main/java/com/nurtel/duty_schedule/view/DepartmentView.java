@@ -27,9 +27,10 @@ public class DepartmentView extends VerticalLayout {
 
         Button addButton = createDepartmentButton(departmentRepository, departmentEntityGrid);
         Button deleteButton = deleteDepartmentButton(departmentRepository, departmentEntityGrid);
+        Button editButton = editDepartmentButton(departmentRepository, departmentEntityGrid);
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
-        horizontalLayout.add(addButton, deleteButton);
+        horizontalLayout.add(addButton, editButton, deleteButton);
         add(horizontalLayout);
 
         add(departmentEntityGrid);
@@ -82,6 +83,59 @@ public class DepartmentView extends VerticalLayout {
         add(dialog);
 
         return addDepartmentbutton;
+    }
+
+    private Button editDepartmentButton(DepartmentRepository repository, Grid<DepartmentEntity> grid){
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Редактировать отдел");
+
+        VerticalLayout dialogLayout = new VerticalLayout();
+        dialog.add(dialogLayout);
+
+        ComboBox<DepartmentEntity> departmentComboBox = new ComboBox<>("Название отдела");
+        departmentComboBox.setItems(repository.findAll());
+        departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
+        TextField departmentNameField = new TextField("Название отдела");
+        dialogLayout.add(departmentComboBox, departmentNameField);
+
+        departmentComboBox.addValueChangeListener(event -> {
+            DepartmentEntity selectedDepartment = event.getValue();
+            if (selectedDepartment != null) {
+                departmentNameField.setValue(selectedDepartment.getName());
+            } else {
+                departmentNameField.clear();
+            }
+        });
+
+        Button editButton = new Button("Сохранить", e -> {
+            DepartmentEntity selectedDepartment = departmentComboBox.getValue();
+            if (selectedDepartment != null && !departmentNameField.isEmpty()) {
+                selectedDepartment.setName(departmentNameField.getValue());
+                repository.save(selectedDepartment);
+
+                grid.setItems(repository.findAll());
+                departmentComboBox.setItems(repository.findAll());
+            } else {
+                Notification.show("Выберите отдел для редактирования", 5000, Notification.Position.BOTTOM_END)
+                        .addThemeVariants(NotificationVariant.LUMO_PRIMARY);
+            }
+        });
+        editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+
+        Button cancelButton = new Button("Отмена", e -> dialog.close());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        dialog.getFooter().add(editButton, cancelButton);
+
+        Button editDepartmentButton = new Button("Редактировать", e -> {
+            departmentComboBox.clear();
+            departmentComboBox.setItems(repository.findAll());
+            dialog.open();
+        });
+        editDepartmentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        add(dialog);
+
+        return editDepartmentButton;
     }
 
     private Button deleteDepartmentButton(DepartmentRepository repository, Grid<DepartmentEntity> grid) {

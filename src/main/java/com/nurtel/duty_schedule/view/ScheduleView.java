@@ -26,7 +26,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -178,9 +177,8 @@ public class ScheduleView extends VerticalLayout {
                                 );
                                 if (checkDuty.isEmpty()) scheduleRepository.save(scheduleEntity);
                                 else {
-                                    Notification notification = Notification.show("На эту дату уже назначен дежурный");
-                                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-                                    notification.setPosition(Notification.Position.MIDDLE);
+                                    Notification.show("На эту дату уже назначен дежурный", 5000,
+                                            Notification.Position.BOTTOM_END).addThemeVariants(NotificationVariant.LUMO_ERROR);
                                     events.clear();
                                     events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
                                     employeeEntityGrid.getDataProvider().refreshAll();
