@@ -33,6 +33,7 @@ public class MainLayout extends AppLayout {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private Button loginButton;
     private MenuBar logoutBar;
+    private String barUsername;
 
     public MainLayout(UserRepository userRepository) {
         createHeader(userRepository);
@@ -97,6 +98,7 @@ public class MainLayout extends AppLayout {
         Button dialogLoginButton = new Button("Войти", e -> {
             String username = usernameField.getValue();
             String password = passwordField.getValue();
+            barUsername = username;
 
             Optional<UserEntity> user = authenticate(userRepository, username, password);
             if (user.isPresent()) {
@@ -141,31 +143,43 @@ public class MainLayout extends AppLayout {
                 .set("color", "#ffffff");
 
         Dialog createUserDialog = new Dialog();
-        TextField newUserUsernameField = new TextField();
-        PasswordField newUserPasswordField = new PasswordField();
+        createUserDialog.setHeaderTitle("Новый пользователь");
+        TextField newUserUsernameField = new TextField("Логин");
+        PasswordField newUserPasswordField = new PasswordField("Пароль");
 
         VerticalLayout createUserLayout = new VerticalLayout();
         createUserLayout.add(newUserUsernameField, newUserPasswordField);
+        createUserDialog.add(createUserLayout);
 
         Button createUserDialogButton = new Button("Создать", e -> {
             Optional<UserEntity> checkUser = userRepository.findByUsername(newUserUsernameField.getValue());
-            if (checkUser.isEmpty()) {
-                UserEntity newUser = UserEntity.builder()
-                        .username(newUserUsernameField.getValue())
-                        .password(passwordEncoder.encode(newUserPasswordField.getValue()))
-                        .build();
-                userRepository.save(newUser);
+            if (!newUserUsernameField.isEmpty() && !newUserPasswordField.isEmpty()){
+                if (checkUser.isEmpty()) {
+                    UserEntity newUser = UserEntity.builder()
+                            .username(newUserUsernameField.getValue())
+                            .password(passwordEncoder.encode(newUserPasswordField.getValue()))
+                            .build();
+                    userRepository.save(newUser);
+                    createUserDialog.close();
+                } else {
+                    Notification.show("Пользователь с таким логином уже существует", 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
             } else {
-                Notification.show("Пользователь с таким логином уже существует", 5000, Notification.Position.BOTTOM_END)
+                Notification.show("Заполните все обязательные поля", 5000, Notification.Position.BOTTOM_END)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
-        Button createUserDialogCancelButton = new Button("Отмена", e -> loginDialog.close());
+        Button createUserDialogCancelButton = new Button("Отмена", e -> createUserDialog.close());
         createUserDialogCancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         createUserDialog.getFooter().add(createUserDialogButton, createUserDialogCancelButton);
 
-        Button addUserButton = new Button("add user", VaadinIcon.CLIPBOARD_USER.create());
+        Button addUserButton = new Button("Добавить пользователя", VaadinIcon.CLIPBOARD_USER.create(), e ->{
+            newUserPasswordField.clear();
+            newUserUsernameField.clear();
+            createUserDialog.open();
+        });
         addUserButton.getStyle()
                 .set("background-color", "#ffffff")
                 .set("color", "#000000");
@@ -174,7 +188,7 @@ public class MainLayout extends AppLayout {
         Icon userIcon = new Icon(VaadinIcon.USER);
 
         MenuItem usernameItem = logoutBar.addItem(userIcon);
-        usernameItem.add("username");
+        usernameItem.add(barUsername);
         usernameItem.getStyle()
                 .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
