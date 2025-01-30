@@ -161,6 +161,9 @@ public class MainLayout extends AppLayout {
                             .build();
                     userRepository.save(newUser);
                     createUserDialog.close();
+                    Notification.show("Пользователь " + newUserUsernameField.getValue() + " успешно создан",
+                                    5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 } else {
                     Notification.show("Пользователь с таким логином уже существует", 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
