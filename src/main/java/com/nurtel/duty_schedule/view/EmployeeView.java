@@ -239,7 +239,7 @@ public class EmployeeView extends VerticalLayout {
                 List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(selectedEmployee.getDepartment().getId());
                 for (EmployeeEntity entity : employees) {
                     if (selectedEmployee.getIsManager()) entity.setManager(null);
-                    if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == selectedEmployee.getId())
+                    if (entity.getIfUnavailable() != null && Objects.equals(entity.getIfUnavailable().getId(), selectedEmployee.getId()))
                         entity.setIfUnavailable(null);
                 }
                 employeeRepository.saveAll(employees);

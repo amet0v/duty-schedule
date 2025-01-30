@@ -116,7 +116,7 @@ public class EmployeeController {
         List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employeeToDelete.getDepartment().getId());
         for (EmployeeEntity entity : employees) {
             if (employeeToDelete.getIsManager()) entity.setManager(null);
-            if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == employeeToDelete.getId())
+            if (entity.getIfUnavailable() != null && Objects.equals(entity.getIfUnavailable().getId(), employeeToDelete.getId()))
                 entity.setIfUnavailable(null);
         }
         employeeRepository.saveAll(employees);
