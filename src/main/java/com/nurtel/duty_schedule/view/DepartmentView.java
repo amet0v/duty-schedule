@@ -3,11 +3,13 @@ package com.nurtel.duty_schedule.view;
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -21,13 +23,29 @@ import java.util.stream.Collectors;
 @Route(value = "/departments", layout = MainLayout.class)
 @PageTitle("Отделы")
 public class DepartmentView extends VerticalLayout {
+    public static Button addButton = new Button();
+    public static Button deleteButton = new Button();
+    public static Button editButton = new Button();
+
+    private void updateButtonsVisibility() {
+        boolean authenticated = MainLayout.isAuthenticated();
+        UI.getCurrent().access(() -> {
+            addButton.setVisible(authenticated);
+            deleteButton.setVisible(authenticated);
+            editButton.setVisible(authenticated);
+        });
+    }
 
     public DepartmentView(DepartmentRepository departmentRepository) {
         Grid<DepartmentEntity> departmentEntityGrid = new Grid<>(DepartmentEntity.class);
 
-        Button addButton = createDepartmentButton(departmentRepository, departmentEntityGrid);
-        Button deleteButton = deleteDepartmentButton(departmentRepository, departmentEntityGrid);
-        Button editButton = editDepartmentButton(departmentRepository, departmentEntityGrid);
+        addButton = createDepartmentButton(departmentRepository, departmentEntityGrid);
+        deleteButton = deleteDepartmentButton(departmentRepository, departmentEntityGrid);
+        editButton = editDepartmentButton(departmentRepository, departmentEntityGrid);
+
+        addButton.setVisible(MainLayout.isAuthenticated());
+        deleteButton.setVisible(MainLayout.isAuthenticated());
+        editButton.setVisible(MainLayout.isAuthenticated());
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         horizontalLayout.add(addButton, editButton, deleteButton);
@@ -85,7 +103,7 @@ public class DepartmentView extends VerticalLayout {
         return addDepartmentbutton;
     }
 
-    private Button editDepartmentButton(DepartmentRepository repository, Grid<DepartmentEntity> grid){
+    private Button editDepartmentButton(DepartmentRepository repository, Grid<DepartmentEntity> grid) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Редактировать отдел");
 

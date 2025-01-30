@@ -30,6 +30,10 @@ import java.util.Optional;
 @Route(value = "/employees", layout = MainLayout.class)
 @PageTitle("Сотрудники")
 public class EmployeeView extends VerticalLayout {
+    public static Button addButton = new Button();
+    public static Button deleteButton = new Button();
+    public static Button editButton = new Button();
+
 
     @Autowired
     public EmployeeView(
@@ -39,12 +43,16 @@ public class EmployeeView extends VerticalLayout {
     ) {
         Grid<EmployeeEntity> employeeEntityGrid = new Grid<>(EmployeeEntity.class);
 
-        Button deleteButton = deleteEmployeeButton(employeeRepository, employeeEntityGrid, scheduleRepository);
-        Button addButton = addEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
-        Button editbutton = editEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
+        deleteButton = deleteEmployeeButton(employeeRepository, employeeEntityGrid, scheduleRepository);
+        addButton = addEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
+        editButton = editEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
+
+        addButton.setVisible(MainLayout.isAuthenticated());
+        deleteButton.setVisible(MainLayout.isAuthenticated());
+        editButton.setVisible(MainLayout.isAuthenticated());
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
-        horizontalLayout.add(addButton, editbutton, deleteButton);
+        horizontalLayout.add(addButton, editButton, deleteButton);
         add(horizontalLayout);
 
         add(employeeEntityGrid);
@@ -147,8 +155,6 @@ public class EmployeeView extends VerticalLayout {
         });
 
         Button addButton = new Button("Добавить", e -> {
-//            DepartmentEntity selectedDepartment = departmentRepository.findById(departmentComboBox.getValue().getId())
-//                    .orElseThrow(() -> new IllegalArgumentException("Отдел не найден"));
             DepartmentEntity selectedDepartment = departmentComboBox.getValue();
             if (selectedDepartment != null && !fullNameField.isEmpty()) {
                 EmployeeEntity employee = EmployeeEntity.builder()
@@ -187,7 +193,6 @@ public class EmployeeView extends VerticalLayout {
                     ));
                     ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
                     ifUnavailableComboBox.clear();
-                    //dialog.close();
                 }
             } else {
                 Notification.show("Заполните все обязательные поля", 5000, Notification.Position.BOTTOM_END)
@@ -298,8 +303,6 @@ public class EmployeeView extends VerticalLayout {
                     selectedEmployee.setIfUnavailable(null);
                     selectedEmployee.setManager(null);
                     selectedEmployee.setDepartment(selectedDepartment);
-//                    Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(selectedDepartment.getId());
-//                    manager.ifPresent(selectedEmployee::setManager);
                 }
 
                 selectedEmployee.setFullName(fullNameField.getValue());
@@ -316,7 +319,6 @@ public class EmployeeView extends VerticalLayout {
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 } else {
                     if (isManagerCheckbox.getValue() && manager.isEmpty()) {
-                        //employee = employeeRepository.save(employee);
                         selectedEmployee.setIsManager(isManagerCheckbox.getValue());
                         employeeRepository.save(selectedEmployee);
 

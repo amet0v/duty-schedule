@@ -6,19 +6,20 @@ import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.schedule.entity.EventTypes;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
@@ -31,7 +32,6 @@ import java.util.stream.IntStream;
 
 @Route(value = "schedule", layout = MainLayout.class)
 @PageTitle("График дежурств")
-@PermitAll
 public class ScheduleView extends VerticalLayout {
 
     @Autowired
@@ -112,46 +112,62 @@ public class ScheduleView extends VerticalLayout {
                     String vacationIcon = "\uD83C\uDFD6";
 
                     if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Duty) {
-                        Button button = new Button(dutyIcon);
-                        button.setWidth("50px");
-                        button.getElement().getStyle().set("min-width", "0px"); // Убираем минимальную ширину
-                        button.setHeight("30px");
-                        button.getElement().getStyle().set("font-size", "20px");
-                        button.getElement().getStyle().set("padding", "0");
-                        button.getElement().getStyle().set("margin", "0");
+                        if (MainLayout.isAuthenticated()) {
+                            Button button = new Button(dutyIcon);
+                            button.setWidth("50px");
+                            button.getElement().getStyle().set("min-width", "0px");
+                            button.setHeight("30px");
+                            button.getElement().getStyle().set("font-size", "20px");
+                            button.getElement().getStyle().set("padding", "0");
+                            button.getElement().getStyle().set("margin", "0");
 
-                        button.addClickListener(e -> {
-                            Optional<ScheduleEntity> duty = scheduleRepository.findAllEventsByEmployeeAndDate(
-                                    employee.getId(), currentDate
-                            );
-                            duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
+                            button.addClickListener(e -> {
+                                Optional<ScheduleEntity> duty = scheduleRepository.findAllEventsByEmployeeAndDate(
+                                        employee.getId(), currentDate
+                                );
+                                duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
 
-                            refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
-//                            events.clear();
-//                            events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
-//                            employeeEntityGrid.getDataProvider().refreshAll();
-                        });
-                        return button;
+                                refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
+                            });
+                            return button;
+                        } else {
+                            Span dutySpan = new Span(dutyIcon);
+                            dutySpan.getStyle()
+                                    .set("text-align", "center")
+                                    .set("display", "flex")
+                                    .set("justify-content", "center")
+                                    .set("align-items", "center")
+                                    .set("font-size", "20px");
+                            return dutySpan;
+                        }
                     } else if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Vacation) {
-                        Button button = new Button(vacationIcon);
-                        button.setWidth("50px");
-                        button.getElement().getStyle().set("min-width", "0px"); // Убираем минимальную ширину
-                        button.setHeight("30px");
-                        button.getElement().getStyle().set("font-size", "20px");
-                        button.getElement().getStyle().set("padding", "0");
-                        button.getElement().getStyle().set("margin", "0");
+                        if (MainLayout.isAuthenticated()) {
+                            Button button = new Button(vacationIcon);
+                            button.setWidth("50px");
+                            button.getElement().getStyle().set("min-width", "0px");
+                            button.setHeight("30px");
+                            button.getElement().getStyle().set("font-size", "20px");
+                            button.getElement().getStyle().set("padding", "0");
+                            button.getElement().getStyle().set("margin", "0");
 
-                        button.addClickListener(e -> {
-                            Optional<ScheduleEntity> duty = scheduleRepository.findAllEventsByEmployeeAndDate(
-                                    employee.getId(), currentDate
-                            );
-                            duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
-                            refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
-//                            events.clear();
-//                            events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
-//                            employeeEntityGrid.getDataProvider().refreshAll();
-                        });
-                        return button;
+                            button.addClickListener(e -> {
+                                Optional<ScheduleEntity> duty = scheduleRepository.findAllEventsByEmployeeAndDate(
+                                        employee.getId(), currentDate
+                                );
+                                duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
+                                refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
+                            });
+                            return button;
+                        } else {
+                            Span vacationSpan = new Span(vacationIcon);
+                            vacationSpan.getStyle()
+                                    .set("text-align", "center")
+                                    .set("display", "flex")
+                                    .set("justify-content", "center")
+                                    .set("align-items", "center")
+                                    .set("font-size", "20px");
+                            return vacationSpan;
+                        }
                     } else {
                         ComboBox<String> comboBox = new ComboBox<>();
                         comboBox.setItems(dutyIcon, vacationIcon);
@@ -161,6 +177,7 @@ public class ScheduleView extends VerticalLayout {
                         comboBox.getElement().getStyle().set("margin", "0");
                         comboBox.getElement().getStyle().set("text-align", "center");
                         comboBox.setWidth("50px");
+                        comboBox.setVisible(MainLayout.isAuthenticated());
                         comboBox.addValueChangeListener(e -> {
                             ScheduleEntity scheduleEntity;
                             if (e.getValue().equals(dutyIcon)) {
@@ -193,9 +210,6 @@ public class ScheduleView extends VerticalLayout {
                                 scheduleRepository.save(scheduleEntity);
                             }
                             refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
-//                            events.clear();
-//                            events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
-//                            employeeEntityGrid.getDataProvider().refreshAll();
                         });
                         return comboBox;
                     }
@@ -203,12 +217,11 @@ public class ScheduleView extends VerticalLayout {
             });
 
             List<EmployeeEntity> sortedEmployees = department.getEmployees().stream()
-                    .sorted((e1, e2) -> Boolean.compare(e2.getIsManager(), e1.getIsManager())) // Сначала с менеджером
+                    .sorted((e1, e2) -> Boolean.compare(e2.getIsManager(), e1.getIsManager()))
                     .toList();
 
             employeeEntityGrid.setItems(sortedEmployees);
 
-            //employeeEntityGrid.setItems(department.getEmployees());
             employeeEntityGrid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
             employeeEntityGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
             ;
