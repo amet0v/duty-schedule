@@ -8,6 +8,7 @@ import com.nurtel.duty_schedule.user.dto.request.UserRequest;
 import com.nurtel.duty_schedule.user.dto.response.UserResponse;
 import com.nurtel.duty_schedule.user.entity.UserEntity;
 import com.nurtel.duty_schedule.user.repository.UserRepository;
+import com.nurtel.duty_schedule.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -56,38 +57,39 @@ public class UserController {
 
     @GetMapping(BaseRoutes.USER_BY_ID)
     public UserResponse getUser(@PathVariable Long id) throws NotFoundException {
-        return UserResponse.of(userRepository.findById(id).orElseThrow(NotFoundException::new));
+        Optional<UserEntity> user = userRepository.findById(id);
+        if (user.isEmpty()) throw new NotFoundException("Пользователь с указанным id не найден");
+        return UserResponse.of(user.get());
     }
 
     @PostMapping(BaseRoutes.USERS)
     public UserResponse createUser(@RequestBody UserRequest request) throws BadRequestException {
         request.validate();
-        Optional<UserEntity> checkUser = userRepository.findByUsername(request.getUsername());
-        if (checkUser.isPresent()) throw new BadRequestException();
-        UserEntity user = UserEntity.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .build();
 
-        user = userRepository.save(user);
-        return UserResponse.of(user);
+        return UserResponse.of(UserService.createUser(
+                userRepository,
+                request.getUsername(),
+                request.getPassword(),
+                passwordEncoder
+        ));
     }
 
     @PutMapping(BaseRoutes.USER_EDIT)
-    public UserResponse editUser(Principal principal, @RequestBody UserRequest request) throws NotFoundException {
-        UserEntity user = userRepository.findByUsername(principal.getName()).orElseThrow(NotFoundException::new);
-        if (request.getUsername() != null) user.setUsername(request.getUsername());
-        if (request.getPassword() != null) user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        user = userRepository.save(user);
-        return UserResponse.of(user);
+    public UserResponse editPrincipalUser(Principal principal, @RequestBody UserRequest request) throws NotFoundException {
+        return UserResponse.of(UserService.editPrincipal(
+                userRepository,
+                request.getUsername(),
+                request.getPassword(),
+                passwordEncoder,
+                principal.getName()
+        ));
     }
 
     @PutMapping(BaseRoutes.USER_BY_ID)
     public UserResponse editUser(
             @PathVariable Long id, @RequestBody UserRequest request, Principal principal
     ) throws NotFoundException, MethodNotAllowedException {
-        UserEntity user = userRepository.findById(id).orElseThrow(NotFoundException::new);
+        UserEntity user = userRepository.findById(id).orElseThrow();
         if (!Objects.equals(principal.getName(), initUsername)) throw new MethodNotAllowedException();
 
         if (request.getUsername() != null) user.setUsername(request.getUsername());
@@ -99,7 +101,8 @@ public class UserController {
 
     @DeleteMapping(BaseRoutes.USER_BY_ID)
     public String deleteUser(@PathVariable Long id) throws NotFoundException {
-        UserEntity user = userRepository.findById(id).orElseThrow(NotFoundException::new);
+        Optional<UserEntity> user = userRepository.findById(id);
+        if (user.isEmpty()) throw new NotFoundException("Пользователь с указанным id не найден");
 
         userRepository.deleteById(id);
         return HttpStatus.OK.name();

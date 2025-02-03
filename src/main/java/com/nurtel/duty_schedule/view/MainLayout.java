@@ -1,7 +1,9 @@
 package com.nurtel.duty_schedule.view;
 
+import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.user.entity.UserEntity;
 import com.nurtel.duty_schedule.user.repository.UserRepository;
+import com.nurtel.duty_schedule.user.service.UserService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
@@ -34,18 +36,11 @@ public class MainLayout extends AppLayout {
     private Button loginButton;
     private MenuBar logoutBar;
     private String barUsername;
+    private MenuItem usernameItem;
 
     public MainLayout(UserRepository userRepository) {
         createHeader(userRepository);
         createSidebar();
-
-        VaadinSession.getCurrent().getService().addSessionInitListener((SessionInitListener) event -> {
-            UI.getCurrent().access(() -> UI.getCurrent().getPage().reload());
-        });
-
-        VaadinSession.getCurrent().getService().addSessionDestroyListener((SessionDestroyListener) event -> {
-            UI.getCurrent().access(() -> UI.getCurrent().getPage().reload());
-        });
     }
 
     private Optional<UserEntity> authenticate(UserRepository userRepository, String username, String password) {
@@ -99,6 +94,7 @@ public class MainLayout extends AppLayout {
             String username = usernameField.getValue();
             String password = passwordField.getValue();
             barUsername = username;
+            updateLogoutBar(barUsername);
 
             Optional<UserEntity> user = authenticate(userRepository, username, password);
             if (user.isPresent()) {
@@ -152,20 +148,20 @@ public class MainLayout extends AppLayout {
         createUserDialog.add(createUserLayout);
 
         Button createUserDialogButton = new Button("Создать", e -> {
-            Optional<UserEntity> checkUser = userRepository.findByUsername(newUserUsernameField.getValue());
-            if (!newUserUsernameField.isEmpty() && !newUserPasswordField.isEmpty()){
-                if (checkUser.isEmpty()) {
-                    UserEntity newUser = UserEntity.builder()
-                            .username(newUserUsernameField.getValue())
-                            .password(passwordEncoder.encode(newUserPasswordField.getValue()))
-                            .build();
-                    userRepository.save(newUser);
-                    createUserDialog.close();
+
+            if (!newUserUsernameField.isEmpty() && !newUserPasswordField.isEmpty()) {
+                try {
+                    UserService.createUser(
+                            userRepository,
+                            newUserUsernameField.getValue(),
+                            newUserPasswordField.getValue(),
+                            passwordEncoder
+                    );
                     Notification.show("Пользователь " + newUserUsernameField.getValue() + " успешно создан",
                                     5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                } else {
-                    Notification.show("Пользователь с таким логином уже существует", 5000, Notification.Position.BOTTOM_END)
+                } catch (BadRequestException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
             } else {
@@ -176,9 +172,11 @@ public class MainLayout extends AppLayout {
         Button createUserDialogCancelButton = new Button("Отмена", e -> createUserDialog.close());
         createUserDialogCancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
-        createUserDialog.getFooter().add(createUserDialogButton, createUserDialogCancelButton);
+        createUserDialog.getFooter().
 
-        Button addUserButton = new Button("Добавить пользователя", VaadinIcon.CLIPBOARD_USER.create(), e ->{
+                add(createUserDialogButton, createUserDialogCancelButton);
+
+        Button addUserButton = new Button("Добавить пользователя", VaadinIcon.CLIPBOARD_USER.create(), e -> {
             newUserPasswordField.clear();
             newUserUsernameField.clear();
             createUserDialog.open();
@@ -188,10 +186,10 @@ public class MainLayout extends AppLayout {
                 .set("color", "#000000");
 
         logoutBar = new MenuBar();
+
         Icon userIcon = new Icon(VaadinIcon.USER);
 
-        MenuItem usernameItem = logoutBar.addItem(userIcon);
-        usernameItem.add(barUsername);
+        usernameItem = logoutBar.addItem(userIcon);
         usernameItem.getStyle()
                 .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
@@ -220,6 +218,12 @@ public class MainLayout extends AppLayout {
         addToNavbar(header);
 
         updateButtonsVisibility();
+    }
+
+    private void updateLogoutBar(String username) {
+        usernameItem.add(username);
+
+        logoutBar.setVisible(true);
     }
 
     private void createSidebar() {

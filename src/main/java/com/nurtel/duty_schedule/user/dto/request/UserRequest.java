@@ -7,11 +7,11 @@ import lombok.Getter;
 @Getter
 @Builder
 public class UserRequest {
-    public String username;
-    public String password;
+    private String username;
+    private String password;
 
     public void validate() throws BadRequestException {
-        if (username == null || username.isBlank()) throw new BadRequestException();
-        if (password == null || password.isBlank()) throw new BadRequestException();
+        if (username == null || username.isBlank()) throw new BadRequestException("Введите логин для пользователя");
+        if (password == null || password.isBlank()) throw new BadRequestException("Введите пароль для пользователя");
     }
 }
