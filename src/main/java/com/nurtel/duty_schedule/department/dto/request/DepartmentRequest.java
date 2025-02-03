@@ -10,6 +10,6 @@ public class DepartmentRequest {
     protected String name;
 
     public void validate() throws BadRequestException {
-        if (name == null || name.isBlank()) throw new BadRequestException();
+        if (name == null || name.isBlank()) throw new BadRequestException("Введите название отдела");
     }
 }

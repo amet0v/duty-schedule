@@ -2,14 +2,16 @@ package com.nurtel.duty_schedule.view;
 
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
+import com.nurtel.duty_schedule.department.service.DepartmentService;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
+import com.nurtel.duty_schedule.exceptions.BadRequestException;
+import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -17,7 +19,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.springframework.data.domain.Sort;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Route(value = "/departments", layout = MainLayout.class)
@@ -61,7 +65,8 @@ public class DepartmentView extends VerticalLayout {
                 .map(EmployeeEntity::getFullName)
                 .collect(Collectors.joining(", "))).setHeader("Сотрудники");
 
-        departmentEntityGrid.setItems(departmentRepository.findAll());
+        departmentEntityGrid.setItems(setSortedItems(departmentRepository));
+
     }
 
     private Button createDepartmentButton(DepartmentRepository repository, Grid<DepartmentEntity> grid) {
@@ -77,14 +82,16 @@ public class DepartmentView extends VerticalLayout {
         Button saveButton = new Button("Сохранить", e -> {
             String departmentName = departmentNameField.getValue();
             if (departmentName != null && !departmentName.trim().isEmpty()) {
-                DepartmentEntity department = DepartmentEntity.builder()
-                        .name(departmentNameField.getValue())
-                        .build();
+                try {
+                    DepartmentService.createDepartment(repository, departmentName);
+                } catch (BadRequestException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
 
-                repository.save(department);
                 departmentNameField.clear();
                 //dialog.close();
-                grid.setItems(repository.findAll());
+                grid.setItems(setSortedItems(repository));
             }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -111,7 +118,7 @@ public class DepartmentView extends VerticalLayout {
         dialog.add(dialogLayout);
 
         ComboBox<DepartmentEntity> departmentComboBox = new ComboBox<>("Название отдела");
-        departmentComboBox.setItems(repository.findAll());
+        departmentComboBox.setItems(setSortedItems(repository));
         departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
         TextField departmentNameField = new TextField("Название отдела");
         dialogLayout.add(departmentComboBox, departmentNameField);
@@ -128,17 +135,21 @@ public class DepartmentView extends VerticalLayout {
         Button editButton = new Button("Сохранить", e -> {
             DepartmentEntity selectedDepartment = departmentComboBox.getValue();
             if (selectedDepartment != null && !departmentNameField.isEmpty()) {
-                selectedDepartment.setName(departmentNameField.getValue());
-                repository.save(selectedDepartment);
+                try {
+                    DepartmentService.editDepartment(repository, selectedDepartment.getId(), departmentNameField.getValue());
+                } catch (NotFoundException | BadRequestException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
 
-                grid.setItems(repository.findAll());
-                departmentComboBox.setItems(repository.findAll());
+                grid.setItems(setSortedItems(repository));
+                departmentComboBox.setItems(setSortedItems(repository));
             } else {
                 Notification.show("Выберите отдел для редактирования", 5000, Notification.Position.BOTTOM_END)
-                        .addThemeVariants(NotificationVariant.LUMO_PRIMARY);
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
-        editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button cancelButton = new Button("Отмена", e -> dialog.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
@@ -146,7 +157,7 @@ public class DepartmentView extends VerticalLayout {
 
         Button editDepartmentButton = new Button("Редактировать", e -> {
             departmentComboBox.clear();
-            departmentComboBox.setItems(repository.findAll());
+            departmentComboBox.setItems(setSortedItems(repository));
             dialog.open();
         });
         editDepartmentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -164,17 +175,22 @@ public class DepartmentView extends VerticalLayout {
         dialog.add(dialogLayout);
 
         ComboBox<DepartmentEntity> departmentComboBox = new ComboBox<>("Название отдела");
-        departmentComboBox.setItems(repository.findAll());
+        departmentComboBox.setItems(setSortedItems(repository));
         departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
         dialogLayout.add(departmentComboBox);
 
         Button deleteButton = new Button("Удалить", e -> {
             DepartmentEntity selectedDepartment = departmentComboBox.getValue();
             if (selectedDepartment != null) {
-                repository.delete(selectedDepartment);
+                try {
+                    DepartmentService.deleteDepartment(repository, selectedDepartment.getId());
+                } catch (NotFoundException | BadRequestException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
                 //dialog.close();
-                grid.setItems(repository.findAll());
-                departmentComboBox.setItems(repository.findAll());
+                grid.setItems(setSortedItems(repository));
+                departmentComboBox.setItems(setSortedItems(repository));
             } else {
                 Notification.show("Выберите отдел для удаления", 5000, Notification.Position.BOTTOM_END)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -188,7 +204,7 @@ public class DepartmentView extends VerticalLayout {
 
         Button deleteDepartmentButton = new Button("Удалить", e -> {
             departmentComboBox.clear();
-            departmentComboBox.setItems(repository.findAll());
+            departmentComboBox.setItems(setSortedItems(repository));
             dialog.open();
         });
         deleteDepartmentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
@@ -196,5 +212,9 @@ public class DepartmentView extends VerticalLayout {
         add(dialog);
 
         return deleteDepartmentButton;
+    }
+
+    private List<DepartmentEntity> setSortedItems(DepartmentRepository repository){
+        return repository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 }

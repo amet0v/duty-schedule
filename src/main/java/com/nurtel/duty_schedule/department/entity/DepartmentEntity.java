@@ -4,6 +4,7 @@ import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -25,4 +26,9 @@ public class DepartmentEntity {
     public String toString() {
         return this.name;
     }
+
+    public List<EmployeeEntity> getEmployees() {
+        return employees != null ? employees : Collections.emptyList();
+    }
+
 }

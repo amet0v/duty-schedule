@@ -9,10 +9,12 @@ import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.routes.BaseRoutes;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.units.qual.N;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,36 +35,26 @@ public class DepartmentController {
 
     @GetMapping(BaseRoutes.DEPARTMENT_BY_ID)
     public DepartmentResponse getDepartment(@PathVariable Long id) throws NotFoundException {
-        return DepartmentResponse.of(departmentRepository.findById(id).orElseThrow(NotFoundException::new));
+        Optional<DepartmentEntity> department = departmentRepository.findById(id);
+        if (department.isEmpty()) throw new NotFoundException("Отдел с указанным id не найден");
+        return DepartmentResponse.of(department.get());
     }
 
     @PostMapping(BaseRoutes.DEPARTMENTS)
-    public DepartmentResponse createDepartment(@RequestBody DepartmentRequest request) {
-        DepartmentEntity department = DepartmentEntity.builder()
-                .name(request.getName())
-                .build();
-
-        department = departmentRepository.save(department);
-        return DepartmentResponse.of(department);
+    public DepartmentResponse createDepartment(@RequestBody DepartmentRequest request) throws BadRequestException {
+        return DepartmentResponse.of(DepartmentService.createDepartment(departmentRepository, request.getName()));
     }
 
     @PutMapping(BaseRoutes.DEPARTMENT_BY_ID)
     public DepartmentResponse editDepartment(@PathVariable Long id, @RequestBody DepartmentRequest request)
             throws BadRequestException, NotFoundException {
         request.validate();
-        DepartmentEntity department = departmentRepository.findById(id).orElseThrow(NotFoundException::new);
-
-        department.setName(request.getName());
-
-        department = departmentRepository.save(department);
-        return DepartmentResponse.of(department);
+        return DepartmentResponse.of(DepartmentService.editDepartment(departmentRepository, id, request.getName()));
     }
 
     @DeleteMapping(BaseRoutes.DEPARTMENT_BY_ID)
     public String deleteDepartment(@PathVariable Long id) throws NotFoundException, BadRequestException {
-        DepartmentEntity department = departmentRepository.findById(id).orElseThrow(NotFoundException::new);
-        if (department.getEmployees().isEmpty()) departmentRepository.deleteById(id);
-        else throw new BadRequestException();
+        DepartmentService.deleteDepartment(departmentRepository, id);
         return HttpStatus.OK.name();
     }
 
