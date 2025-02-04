@@ -23,8 +23,6 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.server.SessionDestroyListener;
-import com.vaadin.flow.server.SessionInitListener;
 import com.vaadin.flow.server.VaadinSession;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -35,7 +33,6 @@ public class MainLayout extends AppLayout {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private Button loginButton;
     private MenuBar logoutBar;
-    private String barUsername;
     private MenuItem usernameItem;
 
     public MainLayout(UserRepository userRepository) {
@@ -60,6 +57,15 @@ public class MainLayout extends AppLayout {
             boolean auth = isAuthenticated();
             loginButton.setVisible(!auth);
             logoutBar.setVisible(auth);
+
+            String username;
+            Object userAttr = VaadinSession.getCurrent().getAttribute("user");
+            if (userAttr instanceof UserEntity user) {
+                username = user.getUsername();
+            } else {
+                username = "";
+            }
+            updateLogoutBar(username);
 
             DepartmentView.addButton.setVisible(auth);
             DepartmentView.editButton.setVisible(auth);
@@ -93,12 +99,10 @@ public class MainLayout extends AppLayout {
         Button dialogLoginButton = new Button("Войти", e -> {
             String username = usernameField.getValue();
             String password = passwordField.getValue();
-            barUsername = username;
-            updateLogoutBar(barUsername);
 
             Optional<UserEntity> user = authenticate(userRepository, username, password);
             if (user.isPresent()) {
-                VaadinSession.getCurrent().setAttribute("user", user);
+                VaadinSession.getCurrent().setAttribute("user", user.get());
                 Notification.show("Сессия установлена для пользователя: " + username, 5000, Notification.Position.BOTTOM_END);
 
                 String currentRoute = UI.getCurrent().getInternals().getActiveViewLocation().getPath();
@@ -223,7 +227,7 @@ public class MainLayout extends AppLayout {
     private void updateLogoutBar(String username) {
         usernameItem.add(username);
 
-        logoutBar.setVisible(true);
+        logoutBar.setVisible(isAuthenticated());
     }
 
     private void createSidebar() {

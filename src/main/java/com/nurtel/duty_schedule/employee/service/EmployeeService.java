@@ -41,7 +41,7 @@ public class EmployeeService {
                 }
             }
         } else throw new BadRequestException("Необходимо указать отдел сотрудника");
-        return null;
+        return department;
     }
 
     private static EmployeeEntity ifUnavailableCheck(
@@ -149,7 +149,7 @@ public class EmployeeService {
 
             employee.setDepartment(department);
         }
-        
+
         ifUnavailable = ifUnavailableCheck(employeeRepository, ifUnavailable, department);
 
         if (fullName != null) employee.setFullName(fullName);

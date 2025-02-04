@@ -105,9 +105,7 @@ public class EmployeeView extends VerticalLayout {
                 .setHeader("Руководитель")
                 .setSortable(true);
 
-        employeeEntityGrid.setItems(employeeRepository.findAll(
-                Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
-        ));
+        employeeEntityGrid.setItems(setSortedItems(employeeRepository));
     }
 
     private Button addEmployeeButton(
@@ -227,7 +225,7 @@ public class EmployeeView extends VerticalLayout {
 
         TextField fullNameField = new TextField("Фамилия Имя");
         ComboBox<DepartmentEntity> departmentComboBox = new ComboBox<>("Отдел");
-        departmentComboBox.setItems(departmentRepository.findAll());
+        departmentComboBox.setItems(departmentRepository.findAll(Sort.by(Sort.Direction.ASC, "id")));
         departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
         Checkbox isManagerCheckbox = new Checkbox("Руководитель?");
         TextField groupField = new TextField("Группа");
@@ -360,9 +358,7 @@ public class EmployeeView extends VerticalLayout {
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 
-                grid.setItems(employeeRepository.findAll(
-                        Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
-                ));
+                grid.setItems(setSortedItems(employeeRepository));
                 employeeComboBox.setItems(setSortedItems(employeeRepository));
                 //dialog.close();
             } else {

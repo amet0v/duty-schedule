@@ -61,6 +61,6 @@ public class DepartmentService {
         Optional<DepartmentEntity> department = departmentRepository.findById(id);
         if (department.isEmpty()) throw new NotFoundException("Отдела с указанным id не найден");
         if (department.get().getEmployees().isEmpty()) departmentRepository.deleteById(id);
-        else throw new BadRequestException("");
+        else throw new BadRequestException("Нельзя удалить отдел у которого есть сотрудники");
     }
 }
