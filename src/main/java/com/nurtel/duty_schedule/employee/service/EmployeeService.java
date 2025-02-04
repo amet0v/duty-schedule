@@ -11,14 +11,58 @@ import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
+@Service
 public class EmployeeService {
+    private static DepartmentEntity departmentCheck(DepartmentRepository departmentRepository, DepartmentEntity department) throws NotFoundException {
+        if (department != null) {
+            if (department.getId() == null && department.getName() == null)
+                throw new BadRequestException("Необходимо передать данные по отделу (id или название)");
+            else {
+                Optional<DepartmentEntity> departmentEntityOptional = Optional.empty();
+                if (department.getName() == null) {
+                    departmentEntityOptional = departmentRepository.findById(department.getId());
+                    if (departmentEntityOptional.isEmpty())
+                        throw new NotFoundException("Отдел с указанным id не найден");
+                    return departmentEntityOptional.get();
+                }
+                if (department.getId() == null) {
+                    departmentEntityOptional = departmentRepository.findByName(department.getName());
+                    if (departmentEntityOptional.isEmpty()) {
+                        department = DepartmentService.createDepartment(departmentRepository, department.getName());
+                        department = departmentRepository.save(department);
+                        return department;
+                    } else return departmentEntityOptional.get();
+                }
+            }
+        } else throw new BadRequestException("Необходимо указать отдел сотрудника");
+        return null;
+    }
+
+    private static EmployeeEntity ifUnavailableCheck(
+            EmployeeRepository employeeRepository,
+            EmployeeEntity ifUnavailable,
+            DepartmentEntity department
+    ) throws NotFoundException {
+        if (ifUnavailable != null) {
+            if (ifUnavailable.getId() == null) throw new NotFoundException("Сотрудник с указанным id не найден");
+            Optional<EmployeeEntity> ifUnavailableCheck = employeeRepository.findById(ifUnavailable.getId());
+            if (ifUnavailableCheck.isPresent() && ifUnavailableCheck.get().getDepartment() == department)
+                return ifUnavailableCheck.get();
+            else {
+                if (ifUnavailableCheck.isEmpty()) throw new NotFoundException("Сотрудник с указанным id не найден");
+                else throw new BadRequestException("Сотрудник с указанным id находится в другом отделе");
+            }
+        }
+        return null;
+    }
+
+    @Transactional
     public static EmployeeEntity createEmployee(
             DepartmentRepository departmentRepository,
             EmployeeRepository employeeRepository,
@@ -31,28 +75,10 @@ public class EmployeeService {
             String telegram,
             EmployeeEntity ifUnavailable
     ) throws NotFoundException, BadRequestException {
-        if (department != null) {
-            if (department.getId() == null && department.getName() == null)
-                throw new BadRequestException("Необходимо передать данные по отделу (id или название)");
-            if (department.getName() != null && department.getId() == null) {
-                department = DepartmentService.createDepartment(departmentRepository, department.getName());
-            } else {
-                Optional<DepartmentEntity> departmentEntityOptional = departmentRepository.findById(department.getId());
-                if (departmentEntityOptional.isEmpty()) throw new NotFoundException("Отдел с указанным id не найден");
-                else department = departmentEntityOptional.get();
-            }
-        } else throw new BadRequestException("Необходимо указать отдел сотрудника");
 
-        if (ifUnavailable != null) {
-            if (ifUnavailable.getId() == null) throw new NotFoundException("Сотрудник с указанным id не найден");
-            Optional<EmployeeEntity> ifUnavailableCheck = employeeRepository.findById(ifUnavailable.getId());
-            if (ifUnavailableCheck.isPresent() && ifUnavailableCheck.get().getDepartment() == department)
-                ifUnavailable = ifUnavailableCheck.get();
-            else {
-                if (ifUnavailableCheck.isEmpty()) throw new NotFoundException("Сотрудник с указанным id не найден");
-                else throw new BadRequestException("Сотрудник с указанным id находится в другом отделе");
-            }
-        }
+        department = departmentCheck(departmentRepository, department);
+
+        ifUnavailable = ifUnavailableCheck(employeeRepository, ifUnavailable, department);
 
         EmployeeEntity employee = EmployeeEntity.builder()
                 .fullName(fullName)
@@ -107,42 +133,24 @@ public class EmployeeService {
         if (employeeCheck.isEmpty()) throw new NotFoundException("Сотрудник с указанным id не найден");
         else employee = employeeCheck.get();
 
-        if (department != null) {
-            if (department.getId() == null && department.getName() == null)
-                throw new BadRequestException("Необходимо передать данные по отделу (id или название)");
-            if (department.getName() != null && department.getId() == null) {
-                department = DepartmentService.createDepartment(departmentRepository, department.getName());
-            } else {
-                Optional<DepartmentEntity> departmentEntityOptional = departmentRepository.findById(department.getId());
-                if (departmentEntityOptional.isEmpty()) throw new NotFoundException("Отдел с указанным id не найден");
-                else department = departmentEntityOptional.get();
-                if (employee.getDepartment() != department) {
-                    employee.setIfUnavailable(null);
-                    employee.setManager(null);
+        department = departmentCheck(departmentRepository, department);
 
-                    List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employee.getDepartment().getId());
-                    for (EmployeeEntity entity : employees) {
-                        if (employee.getIsManager()) entity.setManager(null);
-                        if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == employee.getId())
-                            entity.setIfUnavailable(null);
-                        employeeRepository.saveAll(employees);
-                    }
+        if (employee.getDepartment() != department) {
+            employee.setIfUnavailable(null);
+            employee.setManager(null);
 
-                    employee.setDepartment(department);
-                }
+            List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employee.getDepartment().getId());
+            for (EmployeeEntity entity : employees) {
+                if (employee.getIsManager()) entity.setManager(null);
+                if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == employee.getId())
+                    entity.setIfUnavailable(null);
+                employeeRepository.saveAll(employees);
             }
-        } else throw new BadRequestException("Необходимо указать отдел сотрудника");
 
-        if (ifUnavailable != null) {
-            if (ifUnavailable.getId() == null) throw new NotFoundException("Сотрудник с указанным id не найден");
-            Optional<EmployeeEntity> ifUnavailableCheck = employeeRepository.findById(ifUnavailable.getId());
-            if (ifUnavailableCheck.isPresent() && ifUnavailableCheck.get().getDepartment() == department)
-                ifUnavailable = ifUnavailableCheck.get();
-            else {
-                if (ifUnavailableCheck.isEmpty()) throw new NotFoundException("Сотрудник с указанным id не найден");
-                else throw new BadRequestException("Сотрудник с указанным id находится в другом отделе");
-            }
+            employee.setDepartment(department);
         }
+        
+        ifUnavailable = ifUnavailableCheck(employeeRepository, ifUnavailable, department);
 
         if (fullName != null) employee.setFullName(fullName);
         if (isManager == null || !isManager) {
