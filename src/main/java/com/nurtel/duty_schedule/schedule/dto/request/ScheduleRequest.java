@@ -19,10 +19,10 @@ public class ScheduleRequest {
     protected EventTypes event;
 
     public void validate() throws BadRequestException {
-        if (startDate == null) throw new BadRequestException();
-        if (employee == null) throw new BadRequestException();
+        if (startDate == null) throw new BadRequestException("Необходимо указать дату начала");
+        if (employee == null) throw new BadRequestException("Необходимо указать сотрудника");
 
-        if(endDate != null && startDate.isAfter(endDate)) throw new BadRequestException();
+        if(endDate != null && startDate.isAfter(endDate)) throw new BadRequestException("Дата окончания не может быть раньше даты начала");
 
         if (endDate == null) endDate = startDate;
         //if (event == EventTypes.Duty && (startDate != endDate)) throw new BadRequestException();

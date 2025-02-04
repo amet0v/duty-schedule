@@ -67,19 +67,19 @@ public class ScheduleController {
     public ScheduleResponse createEvent(@RequestBody ScheduleRequest request) throws BadRequestException, NotFoundException {
         request.validate();
 
-        EmployeeEntity employee = employeeRepository.findById(request.getEmployee().getId()).orElseThrow(NotFoundException::new);
+        EmployeeEntity employee = employeeRepository.findById(request.getEmployee().getId()).orElseThrow();
 
         Optional<ScheduleEntity> duty = scheduleRepository.findDutyByDepartmentAndDate(
                 employee.getDepartment().getId(),
                 request.getStartDate(),
                 EventTypes.Duty
         );
-        if (duty.isPresent() && request.getEvent() == EventTypes.Duty) throw new BadRequestException();
+        if (duty.isPresent() && request.getEvent() == EventTypes.Duty) throw new BadRequestException("На эту дату уже назначен дежурный");
 
         duty = scheduleRepository.findAllEventsByEmployeeAndDate(
                 employee.getId(), request.getStartDate()
         );
-        if (duty.isPresent()) throw new BadRequestException();
+        if (duty.isPresent()) throw new BadRequestException("Для этого сотрудника уже назначено событие на эту дату");
 
         ScheduleEntity schedule = ScheduleEntity.builder()
                 .startDate(request.getStartDate())
