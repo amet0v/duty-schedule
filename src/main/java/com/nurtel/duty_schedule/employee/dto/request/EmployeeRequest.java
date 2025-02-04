@@ -17,11 +17,10 @@ public class EmployeeRequest {
     protected String alternativePhoneNumber;
     protected String telegram;
     protected EmployeeEntity ifUnavailable;
-//    protected Date lastCallDate;
 
     public void validate() throws BadRequestException {
-        if (fullName == null || fullName.isBlank()) throw new BadRequestException();
-        if (department == null) throw new BadRequestException();
+        if (fullName == null || fullName.isBlank()) throw new BadRequestException("");
+        if (department == null) throw new BadRequestException("");
         if (isManager == null) isManager = false;
     }
 }

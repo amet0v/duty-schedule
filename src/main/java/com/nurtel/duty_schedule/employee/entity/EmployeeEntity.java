@@ -19,7 +19,6 @@ public class EmployeeEntity {
     protected Long id;
     protected String fullName;
     @ManyToOne(cascade = CascadeType.MERGE)
-            //(cascade = CascadeType.MERGE)
     @JoinColumn(name = "department_id", nullable = true)
     protected DepartmentEntity department;
     protected Boolean isManager;
@@ -29,12 +28,9 @@ public class EmployeeEntity {
     protected String alternativePhoneNumber;
     protected String telegram;
     @ManyToOne
-            //(cascade = CascadeType.ALL)
     @JoinColumn(name = "if_unavailable_id",  nullable = true)
     protected EmployeeEntity ifUnavailable;
     @ManyToOne
-            //(cascade = CascadeType.MERGE)
-            //(cascade = CascadeType.ALL)
     @JoinColumn(name = "manager_id",  nullable = true)
     protected EmployeeEntity manager;
     protected Date lastCallDate;

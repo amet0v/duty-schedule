@@ -6,6 +6,7 @@ import com.nurtel.duty_schedule.employee.dto.request.EmployeeRequest;
 import com.nurtel.duty_schedule.employee.dto.response.EmployeeResponse;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
+import com.nurtel.duty_schedule.employee.service.EmployeeService;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.routes.BaseRoutes;
@@ -29,103 +30,54 @@ public class EmployeeController {
 
     @GetMapping(BaseRoutes.EMPLOYEE_BY_ID)
     public EmployeeResponse getEmployee(@PathVariable Long id) throws NotFoundException {
-        return EmployeeResponse.of(employeeRepository.findById(id).orElseThrow(NotFoundException::new));
+        Optional<EmployeeEntity> employee = employeeRepository.findById(id);
+        if (employee.isEmpty()) throw new NotFoundException("Сотрудник с указанным id не найден");
+        return EmployeeResponse.of(employee.get());
     }
 
     @PostMapping(BaseRoutes.EMPLOYEES)
     public EmployeeResponse createEmployee(@RequestBody EmployeeRequest request) throws BadRequestException, NotFoundException {
         request.validate();
 
-        EmployeeEntity ifUnavailable = null;
-        if (request.getIfUnavailable() != null) {
-            ifUnavailable = employeeRepository.findById(request.getIfUnavailable().getId()).orElseThrow(NotFoundException::new);
-        }
-
-        DepartmentEntity department = departmentRepository.findById(request.getDepartment().getId()).orElseThrow(NotFoundException::new);
-        Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(request.getDepartment().getId());
-        if (request.getIsManager() && manager.isPresent()) throw new BadRequestException();
-
-        EmployeeEntity employee = EmployeeEntity.builder()
-                .fullName(request.getFullName())
-                .department(department)
-                .isManager(request.getIsManager())
-                .group(request.getGroup())
-                .mainPhoneNumber(request.getMainPhoneNumber())
-                .alternativePhoneNumber(request.getAlternativePhoneNumber())
-                .telegram(request.getTelegram())
-                .ifUnavailable(ifUnavailable)
-                .manager(manager.orElse(null))
-                .build();
-
-        if (manager.isEmpty() && request.getIsManager()) {
-            List<EmployeeEntity> employees = employeeRepository.findAll();
-            for (EmployeeEntity e : employees) {
-                e.setManager(employee);
-                employeeRepository.save(e);
-            }
-        }
-        employee = employeeRepository.save(employee);
+        EmployeeEntity employee = EmployeeService.createEmployee(
+                departmentRepository,
+                employeeRepository,
+                request.getFullName(),
+                request.getDepartment(),
+                request.getIsManager(),
+                request.getGroup(),
+                request.getMainPhoneNumber(),
+                request.getAlternativePhoneNumber(),
+                request.getTelegram(),
+                request.getIfUnavailable()
+        );
         return EmployeeResponse.of(employee);
     }
 
     @PutMapping(BaseRoutes.EMPLOYEE_BY_ID)
     public EmployeeResponse editEmployee(@PathVariable Long id, @RequestBody EmployeeRequest request)
             throws BadRequestException, NotFoundException {
-        EmployeeEntity employee = employeeRepository.findById(id).orElseThrow(NotFoundException::new);
+        request.validate();
 
-        if (request.getFullName() != null) employee.setFullName(request.getFullName());
-        if (request.getDepartment() != null) {
-            DepartmentEntity department = departmentRepository.findById(request.getDepartment().getId()).orElseThrow(NotFoundException::new);
-            employee.setDepartment(department);
-        }
-        if (request.getIsManager() != null) employee.setIsManager(request.getIsManager());
-        if (request.getGroup() != null) employee.setGroup(request.getGroup());
-        if (request.getMainPhoneNumber() != null) employee.setMainPhoneNumber(request.getMainPhoneNumber());
-        if (request.getAlternativePhoneNumber() != null)
-            employee.setAlternativePhoneNumber(request.getAlternativePhoneNumber());
-        if (request.getTelegram() != null) employee.setTelegram(request.getTelegram());
-        if (request.getIfUnavailable() != null) {
-            EmployeeEntity ifUnavailable = employeeRepository.findById(request.getIfUnavailable().getId()).orElseThrow(NotFoundException::new);
-            employee.setIfUnavailable(ifUnavailable);
-        }
-
-        Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(employee.getDepartment().getId());
-        if (request.getIsManager() && manager.isPresent() && !Objects.equals(manager.get().getId(), employee.getId())) {
-            throw new BadRequestException();
-        }
-        if (manager.isEmpty() && request.getIsManager()) {
-            List<EmployeeEntity> employees = employeeRepository.findAll();
-            for (EmployeeEntity e : employees) {
-                if (!Objects.equals(e.getId(), id)) e.setManager(employee);
-                employeeRepository.save(e);
-            }
-        }
-        employee = employeeRepository.save(employee);
+        EmployeeEntity employee = EmployeeService.editEmployee(
+                departmentRepository,
+                employeeRepository,
+                id,
+                request.getFullName(),
+                request.getDepartment(),
+                request.getIsManager(),
+                request.getGroup(),
+                request.getMainPhoneNumber(),
+                request.getAlternativePhoneNumber(),
+                request.getTelegram(),
+                request.getIfUnavailable()
+        );
         return EmployeeResponse.of(employee);
     }
 
-    @Transactional
     @DeleteMapping(BaseRoutes.EMPLOYEE_BY_ID)
     public String deleteEmployee(@PathVariable Long id) throws NotFoundException {
-        EmployeeEntity employeeToDelete = employeeRepository.findById(id)
-                .orElseThrow(NotFoundException::new);
-
-        List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(employeeToDelete.getId());
-        scheduleRepository.deleteAll(scheduleEntityList);
-
-        List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employeeToDelete.getDepartment().getId());
-        for (EmployeeEntity entity : employees) {
-            if (employeeToDelete.getIsManager()) entity.setManager(null);
-            if (entity.getIfUnavailable() != null && Objects.equals(entity.getIfUnavailable().getId(), employeeToDelete.getId()))
-                entity.setIfUnavailable(null);
-        }
-        employeeRepository.saveAll(employees);
-        employeeToDelete.setIfUnavailable(null);
-        employeeToDelete.setManager(null);
-        employeeToDelete.setDepartment(null);
-
-        employeeRepository.save(employeeToDelete);
-        employeeRepository.delete(employeeToDelete);
+        EmployeeService.deleteEmployee(employeeRepository, scheduleRepository, id);
 
         return HttpStatus.OK.name();
     }

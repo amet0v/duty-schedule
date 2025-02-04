@@ -4,7 +4,8 @@ import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
-import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
+import com.nurtel.duty_schedule.employee.service.EmployeeService;
+import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -24,8 +25,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Route(value = "/employees", layout = MainLayout.class)
 @PageTitle("Сотрудники")
@@ -124,7 +123,7 @@ public class EmployeeView extends VerticalLayout {
 
         TextField fullNameField = new TextField("Фамилия Имя");
         ComboBox<DepartmentEntity> departmentComboBox = new ComboBox<>("Отдел");
-        departmentComboBox.setItems(departmentRepository.findAll());
+        departmentComboBox.setItems(departmentRepository.findAll(Sort.by(Sort.Direction.ASC, "id")));
         departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
         Checkbox isManagerCheckbox = new Checkbox("Руководитель?");
         TextField groupField = new TextField("Группа");
@@ -157,43 +156,31 @@ public class EmployeeView extends VerticalLayout {
         Button addButton = new Button("Добавить", e -> {
             DepartmentEntity selectedDepartment = departmentComboBox.getValue();
             if (selectedDepartment != null && !fullNameField.isEmpty()) {
-                EmployeeEntity employee = EmployeeEntity.builder()
-                        .fullName(fullNameField.getValue())
-                        .department(selectedDepartment)
-                        .isManager(isManagerCheckbox.getValue())
-                        .group(groupField.getValue())
-                        .mainPhoneNumber(mainPhoneNumberField.getValue())
-                        .alternativePhoneNumber(altPhoneNumberField.getValue())
-                        .telegram(telegramField.getValue())
-                        .ifUnavailable(ifUnavailableComboBox.getValue())
-                        .build();
-
-                Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(selectedDepartment.getId());
-                if (isManagerCheckbox.getValue() && manager.isPresent()) {
-                    Notification.show("У этого отдела уже есть руководитель", 5000, Notification.Position.BOTTOM_END)
+                try {
+                    EmployeeService.createEmployee(
+                            departmentRepository,
+                            employeeRepository,
+                            fullNameField.getValue(),
+                            selectedDepartment,
+                            isManagerCheckbox.getValue(),
+                            groupField.getValue(),
+                            mainPhoneNumberField.getValue(),
+                            altPhoneNumberField.getValue(),
+                            telegramField.getValue(),
+                            ifUnavailableComboBox.getValue()
+                    );
+                } catch (NotFoundException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
-                } else {
-                    if (isManagerCheckbox.getValue() && manager.isEmpty()) {
-                        employee = employeeRepository.save(employee);
-
-                        List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(selectedDepartment.getId());
-                        for (EmployeeEntity employeeEntity : employees) {
-                            employeeEntity.setManager(employee);
-                        }
-                        employeeRepository.saveAll(employees);
-
-                    } else if (!isManagerCheckbox.getValue() && manager.isPresent()) {
-                        employee.setManager(manager.get());
-                        employeeRepository.save(employee);
-                    } else if (!isManagerCheckbox.getValue() && manager.isEmpty()) {
-                        employeeRepository.save(employee);
-                    }
-                    grid.setItems(employeeRepository.findAll(
-                            Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
-                    ));
-                    ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
-                    ifUnavailableComboBox.clear();
                 }
+
+                grid.setItems(employeeRepository.findAll(
+                        Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
+                ));
+                ifUnavailableComboBox.clear();
+                ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
+
+                //dialog.close();
             } else {
                 Notification.show("Заполните все обязательные поля", 5000, Notification.Position.BOTTOM_END)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -235,7 +222,7 @@ public class EmployeeView extends VerticalLayout {
         dialog.add(dialogLayout);
 
         ComboBox<EmployeeEntity> employeeComboBox = new ComboBox<>("Сотрудник");
-        employeeComboBox.setItems(employeeRepository.findAll());
+        employeeComboBox.setItems(setSortedItems(employeeRepository));
         employeeComboBox.setItemLabelGenerator(EmployeeEntity::getFullName);
 
         TextField fullNameField = new TextField("Фамилия Имя");
@@ -299,48 +286,32 @@ public class EmployeeView extends VerticalLayout {
             EmployeeEntity selectedEmployee = employeeComboBox.getValue();
             DepartmentEntity selectedDepartment = departmentComboBox.getValue();
             if (selectedEmployee != null && selectedDepartment != null && !fullNameField.isEmpty()) {
-                if (selectedDepartment != selectedEmployee.getDepartment()) {
-                    selectedEmployee.setIfUnavailable(null);
-                    selectedEmployee.setManager(null);
-                    selectedEmployee.setDepartment(selectedDepartment);
-                }
-
-                selectedEmployee.setFullName(fullNameField.getValue());
-                selectedEmployee.setIsManager(isManagerCheckbox.getValue());
-                selectedEmployee.setGroup(groupField.getValue());
-                selectedEmployee.setMainPhoneNumber(mainPhoneNumberField.getValue());
-                selectedEmployee.setAlternativePhoneNumber(altPhoneNumberField.getValue());
-                selectedEmployee.setTelegram(telegramField.getValue());
-                selectedEmployee.setIfUnavailable(ifUnavailableComboBox.getValue());
-
-                Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(selectedDepartment.getId());
-                if (isManagerCheckbox.getValue() && manager.isPresent()) {
-                    Notification.show("У этого отдела уже есть руководитель", 5000, Notification.Position.BOTTOM_END)
+                try {
+                    EmployeeService.editEmployee(
+                            departmentRepository,
+                            employeeRepository,
+                            selectedEmployee.getId(),
+                            fullNameField.getValue(),
+                            selectedDepartment,
+                            isManagerCheckbox.getValue(),
+                            groupField.getValue(),
+                            mainPhoneNumberField.getValue(),
+                            altPhoneNumberField.getValue(),
+                            telegramField.getValue(),
+                            ifUnavailableComboBox.getValue()
+                    );
+                } catch (NotFoundException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
-                } else {
-                    if (isManagerCheckbox.getValue() && manager.isEmpty()) {
-                        selectedEmployee.setIsManager(isManagerCheckbox.getValue());
-                        employeeRepository.save(selectedEmployee);
-
-                        List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(selectedDepartment.getId());
-                        for (EmployeeEntity employeeEntity : employees) {
-                            employeeEntity.setManager(selectedEmployee);
-                        }
-                        employeeRepository.saveAll(employees);
-
-                    } else if (!isManagerCheckbox.getValue() && manager.isPresent()) {
-                        selectedEmployee.setManager(manager.get());
-                        employeeRepository.save(selectedEmployee);
-                    } else if (!isManagerCheckbox.getValue() && manager.isEmpty()) {
-                        employeeRepository.save(selectedEmployee);
-                    }
-                    grid.setItems(employeeRepository.findAll(
-                            Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
-                    ));
-                    ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
-                    ifUnavailableComboBox.clear();
-                    //dialog.close();
                 }
+
+                grid.setItems(employeeRepository.findAll(
+                        Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
+                ));
+                ifUnavailableComboBox.clear();
+                ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
+
+                //dialog.close();
             } else {
                 Notification.show("Заполните все обязательные поля", 5000, Notification.Position.BOTTOM_END)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -354,7 +325,7 @@ public class EmployeeView extends VerticalLayout {
 
         Button editEmployeeButton = new Button("Редактировать", e -> {
             employeeComboBox.clear();
-            employeeComboBox.setItems(employeeRepository.findAll());
+            employeeComboBox.setItems(setSortedItems(employeeRepository));
             dialog.open();
         });
         editEmployeeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -375,35 +346,24 @@ public class EmployeeView extends VerticalLayout {
         dialog.add(dialogLayout);
 
         ComboBox<EmployeeEntity> employeeComboBox = new ComboBox<>("Сотрудник");
-        employeeComboBox.setItems(employeeRepository.findAll());
+        employeeComboBox.setItems(setSortedItems(employeeRepository));
         employeeComboBox.setItemLabelGenerator(EmployeeEntity::getFullName);
         dialogLayout.add(employeeComboBox);
 
         Button deleteButton = new Button("Удалить", e -> {
             EmployeeEntity selectedEmployee = employeeComboBox.getValue();
             if (selectedEmployee != null) {
-                List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(selectedEmployee.getId());
-                scheduleRepository.deleteAll(scheduleEntityList);
-
-                List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(selectedEmployee.getDepartment().getId());
-                for (EmployeeEntity entity : employees) {
-                    if (selectedEmployee.getIsManager()) entity.setManager(null);
-                    if (entity.getIfUnavailable() != null && Objects.equals(entity.getIfUnavailable().getId(), selectedEmployee.getId()))
-                        entity.setIfUnavailable(null);
+                try {
+                    EmployeeService.deleteEmployee(employeeRepository, scheduleRepository, selectedEmployee.getId());
+                } catch (NotFoundException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
-                employeeRepository.saveAll(employees);
-
-                selectedEmployee.setIfUnavailable(null);
-                selectedEmployee.setManager(null);
-                selectedEmployee.setDepartment(null);
-
-                employeeRepository.save(selectedEmployee);
-                employeeRepository.delete(selectedEmployee);
 
                 grid.setItems(employeeRepository.findAll(
                         Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
                 ));
-                employeeComboBox.setItems(employeeRepository.findAll());
+                employeeComboBox.setItems(setSortedItems(employeeRepository));
                 //dialog.close();
             } else {
                 Notification.show("Выберите сотрудника для удаления", 5000, Notification.Position.BOTTOM_END)
@@ -418,7 +378,7 @@ public class EmployeeView extends VerticalLayout {
 
         Button deleteEmployeeButton = new Button("Удалить", e -> {
             employeeComboBox.clear();
-            employeeComboBox.setItems(employeeRepository.findAll());
+            employeeComboBox.setItems(setSortedItems(employeeRepository));
             dialog.open();
         });
         deleteEmployeeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
@@ -426,5 +386,11 @@ public class EmployeeView extends VerticalLayout {
         add(dialog);
 
         return deleteEmployeeButton;
+    }
+
+    private List<EmployeeEntity> setSortedItems(EmployeeRepository employeeRepository) {
+        return employeeRepository.findAll(
+                Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
+        );
     }
 }
