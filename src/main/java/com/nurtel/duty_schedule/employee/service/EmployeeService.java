@@ -9,12 +9,11 @@ import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -52,11 +51,15 @@ public class EmployeeService {
         if (ifUnavailable != null) {
             if (ifUnavailable.getId() == null) throw new NotFoundException("Сотрудник с указанным id не найден");
             Optional<EmployeeEntity> ifUnavailableCheck = employeeRepository.findById(ifUnavailable.getId());
-            if (ifUnavailableCheck.isPresent() && ifUnavailableCheck.get().getDepartment() == department)
-                return ifUnavailableCheck.get();
-            else {
-                if (ifUnavailableCheck.isEmpty()) throw new NotFoundException("Сотрудник с указанным id не найден");
-                else throw new BadRequestException("Сотрудник с указанным id находится в другом отделе");
+            if (ifUnavailableCheck.isPresent()) {
+                EmployeeEntity foundEmployee = ifUnavailableCheck.get();
+                if (Objects.equals(foundEmployee.getDepartment().getId(), department.getId())) {
+                    return foundEmployee;
+                } else {
+                    throw new BadRequestException("Сотрудник с указанным id находится в другом отделе");
+                }
+            } else {
+                throw new NotFoundException("Сотрудник с указанным id не найден");
             }
         }
         return null;
@@ -80,6 +83,8 @@ public class EmployeeService {
 
         ifUnavailable = ifUnavailableCheck(employeeRepository, ifUnavailable, department);
 
+        isManager = isManager != null ? isManager : false;
+
         EmployeeEntity employee = EmployeeEntity.builder()
                 .fullName(fullName)
                 .department(department)
@@ -92,22 +97,21 @@ public class EmployeeService {
                 .build();
 
         Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(department.getId());
-        if (isManager.equals(true) && manager.isPresent()) {
-            throw new BadRequestException("У этого отдела уже есть руководитель");
+        if (manager.isPresent()) {
+            if (isManager.equals(true)) throw new BadRequestException("У этого отдела уже есть руководитель");
+            else {
+                employee.setManager(manager.get());
+                employeeRepository.save(employee);
+            }
         } else {
-            if (isManager.equals(true) && manager.isEmpty()) {
-                employee = employeeRepository.save(employee);
-
+            if (isManager.equals(true)) {
                 List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(department.getId());
                 for (EmployeeEntity employeeEntity : employees) {
                     employeeEntity.setManager(employee);
                 }
+                employee = employeeRepository.save(employee);
                 employeeRepository.saveAll(employees);
-
-            } else if (isManager.equals(false) && manager.isPresent()) {
-                employee.setManager(manager.get());
-                employeeRepository.save(employee);
-            } else if (isManager.equals(false) && manager.isEmpty()) {
+            } else {
                 employeeRepository.save(employee);
             }
         }
@@ -133,59 +137,78 @@ public class EmployeeService {
         if (employeeCheck.isEmpty()) throw new NotFoundException("Сотрудник с указанным id не найден");
         else employee = employeeCheck.get();
 
-        department = departmentCheck(departmentRepository, department);
+        if (isManager == null) isManager = false;
 
-        if (employee.getDepartment() != department) {
-            employee.setIfUnavailable(null);
-            employee.setManager(null);
+        if (department != null) {
+            department = departmentRepository.findById(
+                    department.getId()).orElseThrow(() -> new NotFoundException("Отдел не найден")
+            );
+        } else department = employee.getDepartment();
 
-            List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employee.getDepartment().getId());
-            for (EmployeeEntity entity : employees) {
-                if (employee.getIsManager()) entity.setManager(null);
-                if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == employee.getId())
-                    entity.setIfUnavailable(null);
-                employeeRepository.saveAll(employees);
+        if (!Objects.equals(department.getId(), employee.getDepartment().getId())) {
+
+            if (employee.getIsManager().equals(true)) {
+                List<EmployeeEntity> employeeEntities = employeeRepository.findAllByDepartment(employee.getDepartment().getId());
+                for (EmployeeEntity employeeEntity : employeeEntities) {
+                    employeeEntity.setManager(null);
+                }
+                employeeRepository.saveAll(employeeEntities);
             }
 
-            employee.setDepartment(department);
+            //employee.setManager(null);
+            employee.setIfUnavailable(null);
+            Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(department.getId());
+            if (manager.isPresent()) {
+                if (isManager.equals(false)) employee.setManager(manager.get());
+                else throw new BadRequestException("У этого отдела уже есть руководитель");
+            } else {
+                if (isManager.equals(true)) {
+                    List<EmployeeEntity> employeeEntities = employeeRepository.findAllByDepartment(department.getId());
+                    for (EmployeeEntity employeeEntity : employeeEntities) {
+                        employeeEntity.setManager(employee);
+                    }
+                    employeeRepository.saveAll(employeeEntities);
+                }
+            }
+        } else {
+            Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(department.getId());
+            if (manager.isPresent()) {
+                if (Objects.equals(manager.get().getId(), employee.getId())) {
+                    if (isManager.equals(false)) {
+                        List<EmployeeEntity> employeeEntities = employeeRepository.findAllByDepartment(department.getId());
+                        for (EmployeeEntity employeeEntity : employeeEntities) {
+                            employeeEntity.setManager(null);
+                        }
+                        employeeRepository.saveAll(employeeEntities);
+                    }
+                } else {
+                    if (isManager.equals(true)) throw new BadRequestException("У этого отдела уже есть руководитель");
+                }
+            } else {
+                if (isManager.equals(true)) {
+                    List<EmployeeEntity> employeeEntities = employeeRepository.findAllByDepartment(department.getId());
+                    for (EmployeeEntity employeeEntity : employeeEntities) {
+                        if (!Objects.equals(employeeEntity.getId(), employee.getId()))
+                            employeeEntity.setManager(employee);
+                    }
+                    employeeRepository.saveAll(employeeEntities);
+                }
+            }
         }
 
         ifUnavailable = ifUnavailableCheck(employeeRepository, ifUnavailable, department);
 
         if (fullName != null) employee.setFullName(fullName);
-        if (isManager == null || !isManager) {
-            isManager = false;
-            employee.setIsManager(isManager);
-        }
+        employee.setDepartment(department);
+        employee.setIsManager(isManager);
         if (group != null) employee.setGroup(group);
         if (mainPhoneNumber != null) employee.setMainPhoneNumber(mainPhoneNumber);
         if (altPhoneNumber != null) employee.setAlternativePhoneNumber(altPhoneNumber);
         if (telegram != null) employee.setTelegram(telegram);
         if (ifUnavailable != null) employee.setIfUnavailable(ifUnavailable);
 
-        Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(department.getId());
-        if (isManager.equals(true) && manager.isPresent()) {
-            Notification.show("У этого отдела уже есть руководитель", 5000, Notification.Position.BOTTOM_END)
-                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
-        } else {
-            if (isManager.equals(true) && manager.isEmpty()) {
-                employee.setIsManager(true);
-                employeeRepository.save(employee);
+        employeeRepository.save(employee);
 
-                List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(department.getId());
-                for (EmployeeEntity employeeEntity : employees) {
-                    employeeEntity.setManager(employee);
-                }
-                employeeRepository.saveAll(employees);
-
-            } else if (isManager.equals(false) && manager.isPresent()) {
-                employee.setManager(manager.get());
-                employeeRepository.save(employee);
-            } else if (isManager.equals(false) && manager.isEmpty()) {
-                employee.setManager(null);
-                employeeRepository.save(employee);
-            }
-        }
         return employee;
     }
 
@@ -205,8 +228,8 @@ public class EmployeeService {
 
         List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employee.getDepartment().getId());
         for (EmployeeEntity entity : employees) {
-            if (employee.getIsManager()) entity.setManager(null);
-            if (entity.getIfUnavailable() != null && entity.getIfUnavailable().getId() == employee.getId())
+            if (employee.getIsManager().equals(true)) entity.setManager(null);
+            if (entity.getIfUnavailable() != null && Objects.equals(entity.getIfUnavailable().getId(), employee.getId()))
                 entity.setIfUnavailable(null);
         }
         employeeRepository.saveAll(employees);
