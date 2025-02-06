@@ -245,7 +245,11 @@ public class MainLayout extends AppLayout {
         scheduleIcon.setColor("#b8c7ce");
         SideNavItem scheduleItem = new SideNavItem("Расписание", ScheduleView.class, scheduleIcon);
 
-        List<SideNavItem> sideNavItems = List.of(departmentItem, employeeItem, scheduleItem);
+        Icon archiveIcon = VaadinIcon.ARCHIVE.create();
+        archiveIcon.setColor("#b8c7ce");
+        SideNavItem archiveItem = new SideNavItem("Архив", ArchiveView.class, archiveIcon);
+
+        List<SideNavItem> sideNavItems = List.of(departmentItem, employeeItem, scheduleItem, archiveItem);
 
         for (SideNavItem item : sideNavItems) {
             item.getStyle()
@@ -272,7 +276,7 @@ public class MainLayout extends AppLayout {
         sideNav.getStyle()
                 .set("background-color", "#232b33");
 
-        sideNav.addItem(departmentItem, employeeItem, scheduleItem);
+        sideNav.addItem(departmentItem, employeeItem, scheduleItem, archiveItem);
         addToDrawer(sideNav);
 
         VerticalLayout sidebar = new VerticalLayout();
