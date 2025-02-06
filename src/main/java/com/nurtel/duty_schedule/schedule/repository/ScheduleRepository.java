@@ -30,7 +30,7 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
             @Param("date") LocalDate date
     );
 
-    @Query("SELECT e FROM ScheduleEntity e WHERE e.startDate <= :endDate AND e.endDate >= :startDate")
+    @Query("SELECT e FROM ScheduleEntity e WHERE e.startDate <= :endDate AND e.endDate >= :startDate AND e.employee.id IS NOT NULL")
     List<ScheduleEntity> findAllByDateRange(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate

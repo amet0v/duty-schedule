@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Getter
 @Setter
@@ -20,7 +19,7 @@ public class ScheduleEntity {
     protected LocalDate startDate;
     protected LocalDate endDate;
     @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
+    @JoinColumn(name = "employee_id", nullable = true)
     protected EmployeeEntity employee;
     protected EventTypes event;
 }

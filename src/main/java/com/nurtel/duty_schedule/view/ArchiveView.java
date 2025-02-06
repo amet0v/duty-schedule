@@ -31,7 +31,9 @@ public class ArchiveView extends VerticalLayout {
             scheduleEntityGrid.removeAllColumns();
 
             scheduleEntityGrid.addColumn(ScheduleEntity::getId).setHeader("ID");
-            scheduleEntityGrid.addColumn(schedule -> schedule.getEmployee().getFullName())
+            scheduleEntityGrid.addColumn(schedule -> schedule.getEmployee() != null
+                            ? schedule.getEmployee().getFullName()
+                            : "❌ Удаленный сотрудник")
                     .setHeader("Сотрудник")
                     .setSortable(true);
             scheduleEntityGrid.addColumn(schedule -> schedule.getEvent() == EventTypes.Duty

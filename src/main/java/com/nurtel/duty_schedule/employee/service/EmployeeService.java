@@ -224,7 +224,11 @@ public class EmployeeService {
         else employee = employeeCheck.get();
 
         List<ScheduleEntity> scheduleEntityList = scheduleRepository.findAllEventsByEmployee(id);
-        scheduleRepository.deleteAll(scheduleEntityList);
+        for (ScheduleEntity event : scheduleEntityList) {
+            event.setEmployee(null);
+        }
+        scheduleRepository.saveAll(scheduleEntityList);
+        //scheduleRepository.deleteAll(scheduleEntityList);
 
         List<EmployeeEntity> employees = employeeRepository.findAllByDepartment(employee.getDepartment().getId());
         for (EmployeeEntity entity : employees) {
