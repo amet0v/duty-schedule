@@ -9,11 +9,13 @@ import lombok.Getter;
 public class DepartmentShortResponse {
     protected Long id;
     protected String name;
+    protected String title;
 
     public static DepartmentShortResponse of(DepartmentEntity department){
         return DepartmentShortResponse.builder()
                 .id(department.getId())
                 .name(department.getName())
+                .title(department.getTitle())
                 .build();
     }
 }

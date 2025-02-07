@@ -41,7 +41,10 @@ public class ScheduleView extends VerticalLayout {
         var departments = departmentRepository.findAll(Sort.by(Sort.Order.asc("id")));
 
         for (DepartmentEntity department : departments) {
-            H3 departmentHeader = new H3(department.getName());
+            H3 departmentHeader = new H3(
+                    department.getTitle() == null
+                    ? department.getName()
+                    : String.format(("%s (%s)"), department.getTitle(), department.getName()));
 
             Grid<EmployeeEntity> employeeEntityGrid = new Grid<>(EmployeeEntity.class);
             add(employeeEntityGrid);
@@ -51,42 +54,49 @@ public class ScheduleView extends VerticalLayout {
                     .setHeader("Сотрудник")
                     .setSortable(true)
                     .setFrozen(true)
-                    .setAutoWidth(true);
+                    .setAutoWidth(true)
+                    .setResizable(true);
 
-            employeeEntityGrid.addColumn(employee ->
-                            employee.getDepartment().getName())
-                    .setHeader("Отдел")
-                    .setSortable(true)
-                    .setAutoWidth(true);
+//            employeeEntityGrid.addColumn(employee ->
+//                            employee.getDepartment().getName())
+//                    .setHeader("Отдел")
+//                    .setSortable(true)
+//                    .setAutoWidth(true)
+//                    .setResizable(true);
 
             employeeEntityGrid.addColumn(EmployeeEntity::getGroup)
                     .setHeader("Группа")
                     .setSortable(true)
-                    .setAutoWidth(true);
+                    .setAutoWidth(true)
+                    .setResizable(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getMainPhoneNumber() != null ? employee.getMainPhoneNumber() : "Не указан")
                     .setHeader("Основной телефон")
                     .setSortable(true)
-                    .setAutoWidth(true);
+                    .setAutoWidth(true)
+                    .setResizable(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getAlternativePhoneNumber() != null ? employee.getAlternativePhoneNumber() : "Не указан")
                     .setHeader("Доп. телефон")
                     .setSortable(true)
-                    .setAutoWidth(true);
+                    .setAutoWidth(true)
+                    .setResizable(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getTelegram() != null ? employee.getTelegram() : "Не указан")
                     .setHeader("Telegram")
                     .setSortable(true)
-                    .setAutoWidth(true);
+                    .setAutoWidth(true)
+                    .setResizable(true);
 
             employeeEntityGrid.addColumn(employee ->
                             employee.getIfUnavailable() != null ? employee.getIfUnavailable().getFullName() : "Не указан")
                     .setHeader("Если сотрудник недоступен")
                     .setSortable(true)
-                    .setAutoWidth(true);
+                    .setAutoWidth(true)
+                    .setResizable(true);
 
             LocalDate startDate = LocalDate.now();
             LocalDate endDate = startDate.plusDays(30);

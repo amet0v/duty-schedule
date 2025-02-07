@@ -7,6 +7,7 @@ import com.nurtel.duty_schedule.exceptions.NotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class DepartmentService {
@@ -24,13 +25,16 @@ public class DepartmentService {
 
     public static DepartmentEntity createDepartment(
             DepartmentRepository departmentRepository,
-            String name
+            String name,
+            String title
     ) throws BadRequestException {
         Optional<DepartmentEntity> departmentEntityOptional = departmentRepository.findByName(name);
-        if (departmentEntityOptional.isPresent()) throw new BadRequestException("Отдел с таким названием уже существует");
+        if (departmentEntityOptional.isPresent())
+            throw new BadRequestException("Отдел с таким названием уже существует");
 
         DepartmentEntity department = DepartmentEntity.builder()
                 .name(name)
+                .title(title)
                 .build();
         department = departmentRepository.save(department);
         return department;
@@ -39,7 +43,8 @@ public class DepartmentService {
     public static DepartmentEntity editDepartment(
             DepartmentRepository departmentRepository,
             Long id,
-            String name
+            String name,
+            String title
     ) throws NotFoundException, BadRequestException {
         DepartmentEntity department;
         Optional<DepartmentEntity> departmentEntityOptional = departmentRepository.findById(id);
@@ -47,8 +52,12 @@ public class DepartmentService {
         else {
             department = departmentEntityOptional.get();
             departmentEntityOptional = departmentRepository.findByName(name);
-            if (departmentEntityOptional.isPresent()) throw new BadRequestException("Отдел с таким названием уже существует");
+            if (departmentEntityOptional.isPresent()) {
+                if (!Objects.equals(department.getId(), departmentEntityOptional.get().getId()))
+                    throw new BadRequestException("Отдел с таким названием уже существует");
+            }
             if (name != null) department.setName(name);
+            if (title != null) department.setTitle(title);
             department = departmentRepository.save(department);
         }
         return department;

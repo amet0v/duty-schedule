@@ -14,12 +14,14 @@ import java.util.stream.Collectors;
 public class DepartmentResponse {
     protected Long id;
     protected String name;
+    protected String title;
     protected List<EmployeeShortResponse> employees;
 
     public static DepartmentResponse of(DepartmentEntity department){
         return DepartmentResponse.builder()
                 .id(department.getId())
                 .name(department.getName())
+                .title(department.getTitle())
                 .employees(department.getEmployees().stream().map(EmployeeShortResponse::of).collect(Collectors.toList()))
                 .build();
     }

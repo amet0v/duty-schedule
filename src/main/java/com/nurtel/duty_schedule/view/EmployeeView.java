@@ -60,50 +60,62 @@ public class EmployeeView extends VerticalLayout {
 
         employeeEntityGrid.addColumn(EmployeeEntity::getId)
                 .setHeader("ID")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(EmployeeEntity::getFullName)
                 .setHeader("Сотрудник")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(employee ->
-                        employee.getDepartment().getName())
+                employee.getDepartment().getTitle() == null
+                        ? employee.getDepartment().getName()
+                        : String.format(("%s (%s)"), employee.getDepartment().getTitle(), employee.getDepartment().getName()))
                 .setHeader("Отдел")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(EmployeeEntity::getGroup)
                 .setHeader("Группа")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(employee ->
                         employee.getMainPhoneNumber() != null ? employee.getMainPhoneNumber() : "Не указан")
                 .setHeader("Основной телефон")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(employee ->
                         employee.getAlternativePhoneNumber() != null ? employee.getAlternativePhoneNumber() : "Не указан")
                 .setHeader("Доп. телефон")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(employee ->
                         employee.getTelegram() != null ? employee.getTelegram() : "Не указан")
                 .setHeader("Telegram")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(employee ->
                         employee.getIfUnavailable() != null ? employee.getIfUnavailable().getFullName() : "Не указан")
                 .setHeader("Если сотрудник недоступен")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(employee ->
                         employee.getIsManager() ? "Да" : "Нет")
                 .setHeader("Руководитель?")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.addColumn(employee ->
                         employee.getManager() != null ? employee.getManager().getFullName() : "Не указан")
                 .setHeader("Руководитель")
-                .setSortable(true);
+                .setSortable(true)
+                .setResizable(true);
 
         employeeEntityGrid.setItems(setSortedItems(employeeRepository));
     }

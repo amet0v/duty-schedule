@@ -19,9 +19,8 @@ public class DepartmentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
     protected String name;
-    @OneToMany(mappedBy = "department",
-            //cascade = CascadeType.MERGE,
-            fetch = FetchType.EAGER)
+    protected String title;
+    @OneToMany(mappedBy = "department", fetch = FetchType.EAGER)
     protected List<EmployeeEntity> employees;
 
     @Override

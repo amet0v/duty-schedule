@@ -33,7 +33,7 @@ public class EmployeeService {
                 if (department.getId() == null) {
                     departmentEntityOptional = departmentRepository.findByName(department.getName());
                     if (departmentEntityOptional.isEmpty()) {
-                        department = DepartmentService.createDepartment(departmentRepository, department.getName());
+                        department = DepartmentService.createDepartment(departmentRepository, department.getName(), department.getTitle());
                         department = departmentRepository.save(department);
                         return department;
                     } else return departmentEntityOptional.get();
