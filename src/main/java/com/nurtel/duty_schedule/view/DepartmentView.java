@@ -104,6 +104,10 @@ public class DepartmentView extends VerticalLayout {
                             departmentTitleField.getValue(),
                             departmentNumberField.getValue()
                     );
+                    Notification.show(String.format(
+                            "Отдел \"%s\" успешно создан", departmentName), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                            );
                 } catch (BadRequestException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -170,6 +174,10 @@ public class DepartmentView extends VerticalLayout {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
+                Notification.show(String.format(
+                                "Отдел \"%s\" успешно изменен", selectedDepartment.getName()), 5000, Notification.Position.BOTTOM_END)
+                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                        );
 
                 grid.setItems(setSortedItems(repository));
                 departmentComboBox.setItems(setSortedItems(repository));
@@ -218,6 +226,11 @@ public class DepartmentView extends VerticalLayout {
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
                 //dialog.close();
+
+                Notification.show(String.format(
+                                "Отдел \"%s\" успешно удален", selectedDepartment.getName()), 5000, Notification.Position.BOTTOM_END)
+                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                        );
                 grid.setItems(setSortedItems(repository));
                 departmentComboBox.setItems(setSortedItems(repository));
             } else {

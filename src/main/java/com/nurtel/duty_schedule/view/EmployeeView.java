@@ -179,6 +179,10 @@ public class EmployeeView extends VerticalLayout {
                             null,
                             ifUnavailableComboBox.getValue()
                     );
+                    Notification.show(String.format(
+                                    "Сотрудник \"%s\" успешно создан", fullNameField), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                            );
                 } catch (NotFoundException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -311,6 +315,10 @@ public class EmployeeView extends VerticalLayout {
                             null,
                             ifUnavailableComboBox.getValue()
                     );
+                    Notification.show(String.format(
+                                    "Сотрудник \"%s\" успешно изменен", fullNameField), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                            );
                 } catch (NotFoundException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
@@ -366,6 +374,10 @@ public class EmployeeView extends VerticalLayout {
             if (selectedEmployee != null) {
                 try {
                     EmployeeService.deleteEmployee(employeeRepository, scheduleRepository, selectedEmployee.getId());
+                    Notification.show(String.format(
+                                    "Сотрудник \"%s\" успешно удален", selectedEmployee.getFullName()), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                            );
                 } catch (NotFoundException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
