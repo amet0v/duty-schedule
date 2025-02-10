@@ -33,7 +33,6 @@ public class EmployeeView extends VerticalLayout {
     public static Button deleteButton = new Button();
     public static Button editButton = new Button();
 
-
     @Autowired
     public EmployeeView(
             EmployeeRepository employeeRepository,
@@ -177,6 +176,7 @@ public class EmployeeView extends VerticalLayout {
                             mainPhoneNumberField.getValue(),
                             altPhoneNumberField.getValue(),
                             telegramField.getValue(),
+                            null,
                             ifUnavailableComboBox.getValue()
                     );
                 } catch (NotFoundException ex) {
@@ -308,6 +308,7 @@ public class EmployeeView extends VerticalLayout {
                             mainPhoneNumberField.getValue(),
                             altPhoneNumberField.getValue(),
                             telegramField.getValue(),
+                            null,
                             ifUnavailableComboBox.getValue()
                     );
                 } catch (NotFoundException ex) {

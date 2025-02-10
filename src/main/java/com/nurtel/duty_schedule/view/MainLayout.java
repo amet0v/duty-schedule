@@ -1,9 +1,13 @@
 package com.nurtel.duty_schedule.view;
 
+import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
+import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
+import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.user.entity.UserEntity;
 import com.nurtel.duty_schedule.user.repository.UserRepository;
 import com.nurtel.duty_schedule.user.service.UserService;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
@@ -24,19 +28,29 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.WrappedSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class MainLayout extends AppLayout {
+    @Autowired
+    private AuthenticationManager authenticationManager;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private Button loginButton;
     private MenuBar logoutBar;
     private MenuItem usernameItem;
+    private final Integer sessionInterval = 3600;
 
-    public MainLayout(UserRepository userRepository) {
-        createHeader(userRepository);
+    public MainLayout(UserRepository userRepository, EmployeeRepository employeeRepository) {
+        createHeader(userRepository, employeeRepository);
         createSidebar();
     }
 
@@ -49,42 +63,58 @@ public class MainLayout extends AppLayout {
     }
 
     public static boolean isAuthenticated() {
-        return VaadinSession.getCurrent().getAttribute("user") != null;
+        return VaadinSession.getCurrent().getAttribute("username") != null;
+    }
+
+    public static boolean isManager() {
+        return VaadinSession.getCurrent().getAttribute("role") == "manager";
+    }
+
+    public static boolean isInDepartment(DepartmentEntity department) {
+        return Objects.equals(VaadinSession.getCurrent().getAttribute("department").toString(), department.getId().toString());
+    }
+
+    public static boolean setRole(EmployeeRepository employeeRepository, String username) {
+        Optional<EmployeeEntity> employee = employeeRepository.findByLogin(username);
+        return employee.map(employeeEntity -> employeeEntity.getIsManager().equals(true)).orElse(false);
+    }
+
+    public static String setDepartment(EmployeeRepository employeeRepository, String username) {
+        Optional<EmployeeEntity> employee = employeeRepository.findByLogin(username);
+        return employee.map(employeeEntity -> employeeEntity.getDepartment().getId().toString()).orElse(null);
     }
 
     private void updateButtonsVisibility() {
         UI.getCurrent().access(() -> {
             boolean auth = isAuthenticated();
+            boolean role = isManager();
             loginButton.setVisible(!auth);
             logoutBar.setVisible(auth);
 
-            String username;
-            Object userAttr = VaadinSession.getCurrent().getAttribute("user");
-            if (userAttr instanceof UserEntity user) {
-                username = user.getUsername();
-            } else {
+            String username = (String) VaadinSession.getCurrent().getAttribute("username");
+            if (username == null) {
                 username = "";
             }
             updateLogoutBar(username);
 
-            DepartmentView.addButton.setVisible(auth);
-            DepartmentView.editButton.setVisible(auth);
-            DepartmentView.deleteButton.setVisible(auth);
+            DepartmentView.addButton.setVisible(auth && role);
+            DepartmentView.editButton.setVisible(auth && role);
+            DepartmentView.deleteButton.setVisible(auth && role);
 
-            EmployeeView.addButton.setVisible(auth);
-            EmployeeView.editButton.setVisible(auth);
-            EmployeeView.deleteButton.setVisible(auth);
+            EmployeeView.addButton.setVisible(auth && role);
+            EmployeeView.editButton.setVisible(auth && role);
+            EmployeeView.deleteButton.setVisible(auth && role);
         });
     }
 
-    private void createHeader(UserRepository userRepository) {
+    private void createHeader(UserRepository userRepository, EmployeeRepository employeeRepository) {
         H1 logo = new H1("О! НурТелеком");
         logo.getStyle()
                 .set("margin", "0")
                 .set("font-size", "var(--lumo-font-size-xl)")
                 .set("color", "#ffffff");
 
-        boolean isAuthenticated = VaadinSession.getCurrent().getSession().getAttribute("user") != null;
+        boolean isAuthenticated = VaadinSession.getCurrent().getSession().getAttribute("username") != null;
 
         Dialog loginDialog = new Dialog();
         loginDialog.setHeaderTitle("Вход в систему");
@@ -100,21 +130,53 @@ public class MainLayout extends AppLayout {
             String username = usernameField.getValue();
             String password = passwordField.getValue();
 
+            /*
             Optional<UserEntity> user = authenticate(userRepository, username, password);
             if (user.isPresent()) {
                 VaadinSession.getCurrent().setAttribute("user", user.get());
-                Notification.show("Сессия установлена для пользователя: " + username, 5000, Notification.Position.BOTTOM_END);
 
-                String currentRoute = UI.getCurrent().getInternals().getActiveViewLocation().getPath();
                 loginDialog.close();
-                if (currentRoute.equals("schedule")) {
+                String currentRoute = UI.getCurrent().getInternals().getActiveViewLocation().getPath();
+                if (currentRoute.equals("schedule"))
                     UI.getCurrent().getPage().reload();
-                } else updateButtonsVisibility();
+                else updateButtonsVisibility();
+
+                Notification.show("Сессия установлена для пользователя: " + username, 5000, Notification.Position.BOTTOM_END);
             } else {
                 Notification.show("Неверные учетные данные", 5000, Notification.Position.BOTTOM_END)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
+            */
+
+            //LDAP start
+            try {
+                Authentication auth = authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(username, password)
+                );
+
+                VaadinSession.getCurrent().setAttribute("username", username);
+                VaadinSession.getCurrent().setAttribute("role", setRole(employeeRepository, username) ? "manager" : "user");
+                VaadinSession.getCurrent().setAttribute("department", setDepartment(employeeRepository, username));
+
+                WrappedSession wrappedSession = VaadinSession.getCurrent().getSession();
+                wrappedSession.setMaxInactiveInterval(sessionInterval);
+
+                loginDialog.close();
+
+                String currentRoute = UI.getCurrent().getInternals().getActiveViewLocation().getPath();
+                if (currentRoute.equals("schedule"))
+                    UI.getCurrent().getPage().reload();
+                else updateButtonsVisibility();
+                UI.getCurrent().getPage().reload();
+
+                Notification.show("Сессия установлена для пользователя: " + username, 5000, Notification.Position.BOTTOM_END);
+            } catch (AuthenticationException ex) {
+                Notification.show("Неверные учетные данные", 5000, Notification.Position.BOTTOM_END)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+            //LDAP END
         });
+        dialogLoginButton.addClickShortcut(Key.ENTER);
 
         Button loginDialogCancelButton = new Button("Отмена", e -> loginDialog.close());
         loginDialogCancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);

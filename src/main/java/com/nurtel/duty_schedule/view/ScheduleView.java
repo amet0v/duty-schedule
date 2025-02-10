@@ -26,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -42,9 +43,11 @@ public class ScheduleView extends VerticalLayout {
 
         for (DepartmentEntity department : departments) {
             H3 departmentHeader = new H3(
-                    department.getTitle() == null
-                    ? department.getName()
-                    : String.format(("%s (%s)"), department.getTitle(), department.getName()));
+                    department.getTitle() != null
+                            ? department.getTitle().isBlank()
+                                ? department.getName()
+                                : String.format(("%s (%s)"), department.getTitle(), department.getName())
+                            : department.getName());
 
             Grid<EmployeeEntity> employeeEntityGrid = new Grid<>(EmployeeEntity.class);
             add(employeeEntityGrid);
@@ -101,7 +104,9 @@ public class ScheduleView extends VerticalLayout {
             LocalDate startDate = LocalDate.now();
             LocalDate endDate = startDate.plusDays(30);
 
-            List<ScheduleEntity> events = scheduleRepository.findAllByDateRange(startDate, endDate);
+            boolean isVisible = MainLayout.isAuthenticated() && MainLayout.isManager() && MainLayout.isInDepartment(department);
+
+            List<ScheduleEntity> events = scheduleRepository.findAllByDateRangeAndEmployees(startDate, endDate, department.getEmployees());
 
             IntStream.range(0, 31).forEach(dayOffset -> {
                 LocalDate currentDate = startDate.plusDays(dayOffset);
@@ -122,7 +127,7 @@ public class ScheduleView extends VerticalLayout {
                     String vacationIcon = "\uD83C\uDFD6";
 
                     if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Duty) {
-                        if (MainLayout.isAuthenticated()) {
+                        if (isVisible) {
                             Button button = new Button(dutyIcon);
                             button.setWidth("50px");
                             button.getElement().getStyle().set("min-width", "0px");
@@ -137,7 +142,8 @@ public class ScheduleView extends VerticalLayout {
                                 );
                                 duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
 
-                                refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
+                                //employeeEntityGrid.getDataProvider().refreshItem(employee);
+                                refresh(events, scheduleRepository, startDate, endDate, department, employeeEntityGrid);
                             });
                             return button;
                         } else {
@@ -151,7 +157,7 @@ public class ScheduleView extends VerticalLayout {
                             return dutySpan;
                         }
                     } else if (matchingEvent.isPresent() && matchingEvent.get().getEvent() == EventTypes.Vacation) {
-                        if (MainLayout.isAuthenticated()) {
+                        if (isVisible) {
                             Button button = new Button(vacationIcon);
                             button.setWidth("50px");
                             button.getElement().getStyle().set("min-width", "0px");
@@ -165,7 +171,8 @@ public class ScheduleView extends VerticalLayout {
                                         employee.getId(), currentDate
                                 );
                                 duty.ifPresent(schedule -> scheduleRepository.deleteById(schedule.getId()));
-                                refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
+                                //employeeEntityGrid.getDataProvider().refreshItem(employee);
+                                refresh(events, scheduleRepository, startDate, endDate, department, employeeEntityGrid);
                             });
                             return button;
                         } else {
@@ -187,7 +194,7 @@ public class ScheduleView extends VerticalLayout {
                         comboBox.getElement().getStyle().set("margin", "0");
                         comboBox.getElement().getStyle().set("text-align", "center");
                         comboBox.setWidth("50px");
-                        comboBox.setVisible(MainLayout.isAuthenticated());
+                        comboBox.setVisible(isVisible);
                         comboBox.addValueChangeListener(e -> {
                             ScheduleEntity scheduleEntity;
                             if (e.getValue().equals(dutyIcon)) {
@@ -208,6 +215,7 @@ public class ScheduleView extends VerticalLayout {
                                             Notification.Position.BOTTOM_END).addThemeVariants(NotificationVariant.LUMO_ERROR);
                                     events.clear();
                                     events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
+                                    //employeeEntityGrid.getDataProvider().refreshItem(employee);
                                     employeeEntityGrid.getDataProvider().refreshAll();
                                 }
                             } else {
@@ -219,7 +227,8 @@ public class ScheduleView extends VerticalLayout {
                                         .build();
                                 scheduleRepository.save(scheduleEntity);
                             }
-                            refresh(events, scheduleRepository, startDate, endDate, employeeEntityGrid);
+                            //employeeEntityGrid.getDataProvider().refreshItem(employee);
+                            refresh(events, scheduleRepository, startDate, endDate, department, employeeEntityGrid);
                         });
                         return comboBox;
                     }
@@ -250,10 +259,11 @@ public class ScheduleView extends VerticalLayout {
             ScheduleRepository scheduleRepository,
             LocalDate startDate,
             LocalDate endDate,
+            DepartmentEntity department,
             Grid<EmployeeEntity> grid
     ) {
         events.clear();
-        events.addAll(scheduleRepository.findAllByDateRange(startDate, endDate));
+        events.addAll(scheduleRepository.findAllByDateRangeAndEmployees(startDate, endDate, department.getEmployees()));
         grid.getDataProvider().refreshAll();
     }
 }

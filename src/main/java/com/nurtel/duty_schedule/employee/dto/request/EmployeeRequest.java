@@ -16,6 +16,7 @@ public class EmployeeRequest {
     protected String mainPhoneNumber;
     protected String alternativePhoneNumber;
     protected String telegram;
+    protected String login;
     protected EmployeeEntity ifUnavailable;
 
     public void validate() throws BadRequestException {

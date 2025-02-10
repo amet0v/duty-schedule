@@ -49,6 +49,7 @@ public class EmployeeController {
                 request.getMainPhoneNumber(),
                 request.getAlternativePhoneNumber(),
                 request.getTelegram(),
+                request.getLogin(),
                 request.getIfUnavailable()
         );
         return EmployeeResponse.of(employee);
@@ -57,7 +58,7 @@ public class EmployeeController {
     @PutMapping(BaseRoutes.EMPLOYEE_BY_ID)
     public EmployeeResponse editEmployee(@PathVariable Long id, @RequestBody EmployeeRequest request)
             throws BadRequestException, NotFoundException {
-        request.validate();
+        //request.validate();
 
         EmployeeEntity employee = EmployeeService.editEmployee(
                 departmentRepository,
@@ -70,6 +71,7 @@ public class EmployeeController {
                 request.getMainPhoneNumber(),
                 request.getAlternativePhoneNumber(),
                 request.getTelegram(),
+                request.getLogin(),
                 request.getIfUnavailable()
         );
         return EmployeeResponse.of(employee);

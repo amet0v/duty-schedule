@@ -76,6 +76,7 @@ public class EmployeeService {
             String mainPhoneNumber,
             String altPhoneNumber,
             String telegram,
+            String login,
             EmployeeEntity ifUnavailable
     ) throws NotFoundException, BadRequestException {
 
@@ -93,6 +94,7 @@ public class EmployeeService {
                 .mainPhoneNumber(mainPhoneNumber)
                 .alternativePhoneNumber(altPhoneNumber)
                 .telegram(telegram)
+                .login(login)
                 .ifUnavailable(ifUnavailable)
                 .build();
 
@@ -130,6 +132,7 @@ public class EmployeeService {
             String mainPhoneNumber,
             String altPhoneNumber,
             String telegram,
+            String login,
             EmployeeEntity ifUnavailable
     ) throws NotFoundException {
         EmployeeEntity employee;
@@ -206,6 +209,7 @@ public class EmployeeService {
         if (altPhoneNumber != null) employee.setAlternativePhoneNumber(altPhoneNumber);
         if (telegram != null) employee.setTelegram(telegram);
         if (ifUnavailable != null) employee.setIfUnavailable(ifUnavailable);
+        if (login != null) employee.setLogin(login);
 
         employeeRepository.save(employee);
 

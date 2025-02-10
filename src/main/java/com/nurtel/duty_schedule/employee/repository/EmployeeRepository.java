@@ -19,4 +19,7 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, Long> 
 
     @Query("SELECT e FROM EmployeeEntity e WHERE e.department.id = :departmentId")
     List<EmployeeEntity> findAllByDepartment(@Param("departmentId") Long departmentId);
+
+    @Query("SELECT e FROM EmployeeEntity e WHERE e.login = :login")
+    Optional<EmployeeEntity> findByLogin(@Param("login") String login);
 }

@@ -1,7 +1,9 @@
 package com.nurtel.duty_schedule.schedule.repository;
 
+import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.schedule.entity.EventTypes;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,6 +36,14 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
     List<ScheduleEntity> findAllByDateRange(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
+    );
+
+    @Cacheable("scheduleEvents")
+    @Query("SELECT s FROM ScheduleEntity s WHERE s.startDate >= :startDate AND s.endDate <= :endDate AND s.employee.id IS NOT NULL AND s.employee IN :employees")
+    List<ScheduleEntity> findAllByDateRangeAndEmployees(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("employees") List<EmployeeEntity> employees
     );
 
     @Query("SELECT s FROM ScheduleEntity s WHERE s.employee.department.id = :departmentId AND :date BETWEEN s.startDate AND s.endDate AND s.event = :eventType")

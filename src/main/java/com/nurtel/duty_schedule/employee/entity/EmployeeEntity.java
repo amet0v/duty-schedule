@@ -27,6 +27,7 @@ public class EmployeeEntity {
     protected String mainPhoneNumber;
     protected String alternativePhoneNumber;
     protected String telegram;
+    protected String login;
     @ManyToOne
     @JoinColumn(name = "if_unavailable_id",  nullable = true)
     protected EmployeeEntity ifUnavailable;
