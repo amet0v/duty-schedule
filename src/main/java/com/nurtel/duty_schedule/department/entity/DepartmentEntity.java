@@ -20,12 +20,17 @@ public class DepartmentEntity {
     protected Long id;
     protected String name;
     protected String title;
+    protected Integer number;
     @OneToMany(mappedBy = "department", fetch = FetchType.EAGER)
     protected List<EmployeeEntity> employees;
 
     @Override
     public String toString() {
-        return this.name;
+        return this.getTitle() != null
+                ? this.getTitle().isBlank()
+                    ? this.getName()
+                    : String.format(("%s (%s)"), this.getTitle(), this.getName())
+                : this.getName();
     }
 
     public List<EmployeeEntity> getEmployees() {

@@ -86,6 +86,7 @@ public class ScheduleController {
                 .endDate(request.getEndDate())
                 .employee(employee)
                 .event(request.getEvent())
+                .departmentName(employee.getDepartment().toString())
                 .build();
 
         schedule = scheduleRepository.save(schedule);

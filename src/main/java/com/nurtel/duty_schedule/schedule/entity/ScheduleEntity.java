@@ -1,4 +1,5 @@
 package com.nurtel.duty_schedule.schedule.entity;
+import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,4 +23,5 @@ public class ScheduleEntity {
     @JoinColumn(name = "employee_id", nullable = true)
     protected EmployeeEntity employee;
     protected EventTypes event;
+    protected String departmentName;
 }

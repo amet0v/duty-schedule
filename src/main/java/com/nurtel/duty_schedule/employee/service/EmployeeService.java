@@ -18,7 +18,10 @@ import java.util.Optional;
 
 @Service
 public class EmployeeService {
-    private static DepartmentEntity departmentCheck(DepartmentRepository departmentRepository, DepartmentEntity department) throws NotFoundException {
+    private static DepartmentEntity departmentCheck(
+            DepartmentRepository departmentRepository,
+            DepartmentEntity department
+    ) throws NotFoundException {
         if (department != null) {
             if (department.getId() == null && department.getName() == null)
                 throw new BadRequestException("Необходимо передать данные по отделу (id или название)");
@@ -33,7 +36,11 @@ public class EmployeeService {
                 if (department.getId() == null) {
                     departmentEntityOptional = departmentRepository.findByName(department.getName());
                     if (departmentEntityOptional.isEmpty()) {
-                        department = DepartmentService.createDepartment(departmentRepository, department.getName(), department.getTitle());
+                        department = DepartmentService.createDepartment(
+                                departmentRepository,
+                                department.getName(),
+                                department.getTitle(),
+                                null);
                         department = departmentRepository.save(department);
                         return department;
                     } else return departmentEntityOptional.get();

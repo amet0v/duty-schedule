@@ -31,22 +31,37 @@ public class ArchiveView extends VerticalLayout {
             scheduleEntityGrid.removeAllColumns();
 
             scheduleEntityGrid.addColumn(ScheduleEntity::getId).setHeader("ID");
+
             scheduleEntityGrid.addColumn(schedule -> schedule.getEmployee() != null
                             ? schedule.getEmployee().getFullName()
                             : "❌ Удаленный сотрудник")
                     .setHeader("Сотрудник")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setResizable(true);
+
+            scheduleEntityGrid.addColumn(schedule -> schedule.getDepartmentName() != null
+                            ? schedule.getDepartmentName()
+                            : "❌ Удаленный отдел")
+                    .setHeader("Отдел")
+                    .setSortable(true)
+                    .setResizable(true);
+
             scheduleEntityGrid.addColumn(schedule -> schedule.getEvent() == EventTypes.Duty
                             ? "\uD83D\uDEE0\uFE0F Дежурство"
                             : "\uD83C\uDFD6\uFE0F Отпуск")
                     .setHeader("Тип события")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setResizable(true);
+
             scheduleEntityGrid.addColumn(ScheduleEntity::getStartDate)
                     .setHeader("Дата начала")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setResizable(true);
+
             scheduleEntityGrid.addColumn(ScheduleEntity::getEndDate)
                     .setHeader("Дата окончания")
-                    .setSortable(true);
+                    .setSortable(true)
+                    .setResizable(true);
 
             scheduleEntityGrid.setItems(schedules);
             add(scheduleEntityGrid);

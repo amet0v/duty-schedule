@@ -39,15 +39,10 @@ public class ScheduleView extends VerticalLayout {
     public ScheduleView(DepartmentRepository departmentRepository,
                         ScheduleRepository scheduleRepository) {
 
-        var departments = departmentRepository.findAll(Sort.by(Sort.Order.asc("id")));
+        var departments = departmentRepository.findAll(Sort.by(Sort.Order.asc("number")));
 
         for (DepartmentEntity department : departments) {
-            H3 departmentHeader = new H3(
-                    department.getTitle() != null
-                            ? department.getTitle().isBlank()
-                                ? department.getName()
-                                : String.format(("%s (%s)"), department.getTitle(), department.getName())
-                            : department.getName());
+            H3 departmentHeader = new H3(department.toString());
 
             Grid<EmployeeEntity> employeeEntityGrid = new Grid<>(EmployeeEntity.class);
             add(employeeEntityGrid);
@@ -203,6 +198,7 @@ public class ScheduleView extends VerticalLayout {
                                         .startDate(currentDate)
                                         .endDate(currentDate)
                                         .event(EventTypes.Duty)
+                                        .departmentName(department.toString())
                                         .build();
                                 Optional<ScheduleEntity> checkDuty = scheduleRepository.findDutyByDepartmentAndDate(
                                         employee.getDepartment().getId(),
@@ -224,6 +220,7 @@ public class ScheduleView extends VerticalLayout {
                                         .startDate(currentDate)
                                         .endDate(currentDate)
                                         .event(EventTypes.Vacation)
+                                        .departmentName(department.toString())
                                         .build();
                                 scheduleRepository.save(scheduleEntity);
                             }

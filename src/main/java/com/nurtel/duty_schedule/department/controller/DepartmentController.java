@@ -42,14 +42,14 @@ public class DepartmentController {
 
     @PostMapping(BaseRoutes.DEPARTMENTS)
     public DepartmentResponse createDepartment(@RequestBody DepartmentRequest request) throws BadRequestException {
-        return DepartmentResponse.of(DepartmentService.createDepartment(departmentRepository, request.getName(), request.getTitle()));
+        return DepartmentResponse.of(DepartmentService.createDepartment(departmentRepository, request.getName(), request.getTitle(), null));
     }
 
     @PutMapping(BaseRoutes.DEPARTMENT_BY_ID)
     public DepartmentResponse editDepartment(@PathVariable Long id, @RequestBody DepartmentRequest request)
             throws BadRequestException, NotFoundException {
         request.validate();
-        return DepartmentResponse.of(DepartmentService.editDepartment(departmentRepository, id, request.getName(), request.getTitle()));
+        return DepartmentResponse.of(DepartmentService.editDepartment(departmentRepository, id, request.getName(), request.getTitle(), null));
     }
 
     @DeleteMapping(BaseRoutes.DEPARTMENT_BY_ID)

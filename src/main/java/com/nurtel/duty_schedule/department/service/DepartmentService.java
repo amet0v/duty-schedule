@@ -26,7 +26,8 @@ public class DepartmentService {
     public static DepartmentEntity createDepartment(
             DepartmentRepository departmentRepository,
             String name,
-            String title
+            String title,
+            Integer number
     ) throws BadRequestException {
         Optional<DepartmentEntity> departmentEntityOptional = departmentRepository.findByName(name);
         if (departmentEntityOptional.isPresent())
@@ -35,6 +36,7 @@ public class DepartmentService {
         DepartmentEntity department = DepartmentEntity.builder()
                 .name(name)
                 .title(title)
+                .number(number)
                 .build();
         department = departmentRepository.save(department);
         return department;
@@ -44,7 +46,8 @@ public class DepartmentService {
             DepartmentRepository departmentRepository,
             Long id,
             String name,
-            String title
+            String title,
+            Integer number
     ) throws NotFoundException, BadRequestException {
         DepartmentEntity department;
         Optional<DepartmentEntity> departmentEntityOptional = departmentRepository.findById(id);
@@ -58,6 +61,7 @@ public class DepartmentService {
             }
             if (name != null) department.setName(name);
             if (title != null) department.setTitle(title);
+            if (number != null) department.setNumber(number);
             department = departmentRepository.save(department);
         }
         return department;

@@ -16,6 +16,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -55,11 +56,15 @@ public class DepartmentView extends VerticalLayout {
                 .setSortable(true)
                 .setResizable(true);
 
+        departmentEntityGrid.addColumn(DepartmentEntity::getNumber)
+                .setHeader("Номер в списке")
+                .setSortable(true)
+                .setResizable(true);
+
         departmentEntityGrid.addColumn(DepartmentEntity::getName)
                 .setHeader("Полное название")
                 .setSortable(true)
                 .setResizable(true);
-
 
         departmentEntityGrid.addColumn(DepartmentEntity::getTitle)
                 .setHeader("Короткое название")
@@ -86,7 +91,8 @@ public class DepartmentView extends VerticalLayout {
 
         TextField departmentNameField = new TextField("Полное название отдела");
         TextField departmentTitleField = new TextField("Короткое название отдела");
-        dialogLayout.add(departmentNameField, departmentTitleField);
+        IntegerField departmentNumberField = new IntegerField("Номер отдела в списке");
+        dialogLayout.add(departmentNameField, departmentTitleField, departmentNumberField);
 
         Button saveButton = new Button("Сохранить", e -> {
             String departmentName = departmentNameField.getValue();
@@ -95,7 +101,8 @@ public class DepartmentView extends VerticalLayout {
                     DepartmentService.createDepartment(
                             repository,
                             departmentName,
-                            departmentTitleField.getValue()
+                            departmentTitleField.getValue(),
+                            departmentNumberField.getValue()
                     );
                 } catch (BadRequestException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
@@ -135,12 +142,14 @@ public class DepartmentView extends VerticalLayout {
         departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
         TextField departmentNameField = new TextField("Полное название отдела");
         TextField departmentTitleField = new TextField("Короткое название отдела");
-        dialogLayout.add(departmentComboBox, departmentNameField, departmentTitleField);
+        IntegerField departmentNumberField = new IntegerField("Номер отдела в списке");
+        dialogLayout.add(departmentComboBox, departmentNameField, departmentTitleField, departmentNumberField);
 
         departmentComboBox.addValueChangeListener(event -> {
             DepartmentEntity selectedDepartment = event.getValue();
             if (selectedDepartment != null) {
                 departmentNameField.setValue(selectedDepartment.getName());
+                departmentNumberField.setValue(selectedDepartment.getNumber());
             } else {
                 departmentNameField.clear();
             }
@@ -154,7 +163,8 @@ public class DepartmentView extends VerticalLayout {
                             repository,
                             selectedDepartment.getId(),
                             departmentNameField.getValue(),
-                            departmentTitleField.getValue()
+                            departmentTitleField.getValue(),
+                            departmentNumberField.getValue()
                     );
                 } catch (NotFoundException | BadRequestException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
