@@ -33,6 +33,7 @@ public class DepartmentView extends VerticalLayout {
 
     public DepartmentView(DepartmentRepository departmentRepository) {
         Grid<DepartmentEntity> departmentEntityGrid = new Grid<>(DepartmentEntity.class);
+        departmentEntityGrid.getStyle().set("height", "80vh");
 
         addButton = createDepartmentButton(departmentRepository, departmentEntityGrid);
         deleteButton = deleteDepartmentButton(departmentRepository, departmentEntityGrid);
@@ -104,7 +105,7 @@ public class DepartmentView extends VerticalLayout {
                             departmentNumberField.getValue()
                     );
                     Notification.show(String.format(
-                            "Отдел \"%s\" успешно создан", departmentName), 5000, Notification.Position.BOTTOM_END)
+                                    "Отдел \"%s\" успешно создан", departmentName), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_SUCCESS
                             );
                 } catch (BadRequestException ex) {
@@ -151,8 +152,16 @@ public class DepartmentView extends VerticalLayout {
         departmentComboBox.addValueChangeListener(event -> {
             DepartmentEntity selectedDepartment = event.getValue();
             if (selectedDepartment != null) {
-                departmentNameField.setValue(selectedDepartment.getName());
-                departmentNumberField.setValue(selectedDepartment.getNumber());
+                departmentNameField.setValue(
+                        selectedDepartment.getName() == null
+                                ? ""
+                                : selectedDepartment.getName()
+                );
+                departmentNumberField.setValue(
+                        selectedDepartment.getNumber() == null
+                                ? null
+                                : selectedDepartment.getNumber()
+                );
             } else {
                 departmentNameField.clear();
             }
@@ -169,14 +178,14 @@ public class DepartmentView extends VerticalLayout {
                             departmentTitleField.getValue(),
                             departmentNumberField.getValue()
                     );
+                    Notification.show(String.format(
+                                    "Отдел \"%s\" успешно изменен", selectedDepartment.getName()), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                            );
                 } catch (NotFoundException | BadRequestException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
-                Notification.show(String.format(
-                                "Отдел \"%s\" успешно изменен", selectedDepartment.getName()), 5000, Notification.Position.BOTTOM_END)
-                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS
-                        );
 
                 grid.setItems(setSortedItems(repository));
                 departmentComboBox.setItems(setSortedItems(repository));
@@ -220,16 +229,16 @@ public class DepartmentView extends VerticalLayout {
             if (selectedDepartment != null) {
                 try {
                     DepartmentService.deleteDepartment(repository, selectedDepartment.getId());
+                    Notification.show(String.format(
+                                    "Отдел \"%s\" успешно удален", selectedDepartment.getName()), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                            );
                 } catch (NotFoundException | BadRequestException ex) {
                     Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
                 //dialog.close();
 
-                Notification.show(String.format(
-                                "Отдел \"%s\" успешно удален", selectedDepartment.getName()), 5000, Notification.Position.BOTTOM_END)
-                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS
-                        );
                 grid.setItems(setSortedItems(repository));
                 departmentComboBox.setItems(setSortedItems(repository));
             } else {

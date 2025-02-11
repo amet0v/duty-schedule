@@ -65,6 +65,7 @@ public class ScheduleView extends VerticalLayout {
             employeeEntityGrid.addColumn(EmployeeEntity::getGroup)
                     .setHeader("Группа")
                     .setSortable(true)
+                    .setFrozen(true)
                     .setAutoWidth(true)
                     .setResizable(true);
 
@@ -72,6 +73,7 @@ public class ScheduleView extends VerticalLayout {
                             employee.getMainPhoneNumber() != null ? employee.getMainPhoneNumber() : "Не указан")
                     .setHeader("Основной телефон")
                     .setSortable(true)
+                    .setFrozen(true)
                     .setAutoWidth(true)
                     .setResizable(true);
 
@@ -79,6 +81,7 @@ public class ScheduleView extends VerticalLayout {
                             employee.getAlternativePhoneNumber() != null ? employee.getAlternativePhoneNumber() : "Не указан")
                     .setHeader("Доп. телефон")
                     .setSortable(true)
+                    .setFrozen(true)
                     .setAutoWidth(true)
                     .setResizable(true);
 
@@ -86,6 +89,7 @@ public class ScheduleView extends VerticalLayout {
                             employee.getTelegram() != null ? employee.getTelegram() : "Не указан")
                     .setHeader("Telegram")
                     .setSortable(true)
+                    .setFrozen(true)
                     .setAutoWidth(true)
                     .setResizable(true);
 
@@ -93,6 +97,7 @@ public class ScheduleView extends VerticalLayout {
                             employee.getIfUnavailable() != null ? employee.getIfUnavailable().getFullName() : "Не указан")
                     .setHeader("Если сотрудник недоступен")
                     .setSortable(true)
+                    .setFrozen(true)
                     .setAutoWidth(true)
                     .setResizable(true);
 

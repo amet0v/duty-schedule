@@ -37,6 +37,7 @@ public class EmployeeView extends VerticalLayout {
             DepartmentRepository departmentRepository
     ) {
         Grid<EmployeeEntity> employeeEntityGrid = new Grid<>(EmployeeEntity.class);
+        employeeEntityGrid.getStyle().set("height", "80vh");
 
         deleteButton = deleteEmployeeButton(employeeRepository, employeeEntityGrid, scheduleRepository);
         addButton = addEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
@@ -178,7 +179,7 @@ public class EmployeeView extends VerticalLayout {
                             null
                     );
                     Notification.show(String.format(
-                                    "Сотрудник \"%s\" успешно создан", fullNameField), 5000, Notification.Position.BOTTOM_END)
+                                    "Сотрудник \"%s\" успешно создан", fullNameField.getValue()), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_SUCCESS
                             );
                 } catch (NotFoundException ex) {
@@ -266,10 +267,26 @@ public class EmployeeView extends VerticalLayout {
                 fullNameField.setValue(selectedEmployee.getFullName());
                 departmentComboBox.setValue(selectedEmployee.getDepartment());
                 isManagerCheckbox.setValue(selectedEmployee.getIsManager());
-                groupField.setValue(selectedEmployee.getGroup());
-                mainPhoneNumberField.setValue(selectedEmployee.getMainPhoneNumber());
-                altPhoneNumberField.setValue(selectedEmployee.getAlternativePhoneNumber());
-                telegramField.setValue(selectedEmployee.getTelegram());
+                groupField.setValue(
+                        selectedEmployee.getGroup() == null
+                        ? ""
+                        : selectedEmployee.getGroup()
+                );
+                mainPhoneNumberField.setValue(
+                        selectedEmployee.getMainPhoneNumber() == null
+                                ? ""
+                                : selectedEmployee.getMainPhoneNumber()
+                );
+                altPhoneNumberField.setValue(
+                        selectedEmployee.getAlternativePhoneNumber() == null
+                        ? ""
+                        : selectedEmployee.getAlternativePhoneNumber()
+                );
+                telegramField.setValue(
+                        selectedEmployee.getTelegram() == null
+                                ? ""
+                                : selectedEmployee.getTelegram()
+                );
                 ifUnavailableComboBox.setValue(selectedEmployee.getIfUnavailable());
             } else {
                 employeeComboBox.clear();
@@ -315,7 +332,7 @@ public class EmployeeView extends VerticalLayout {
                             null
                     );
                     Notification.show(String.format(
-                                    "Сотрудник \"%s\" успешно изменен", fullNameField), 5000, Notification.Position.BOTTOM_END)
+                                    "Сотрудник \"%s\" успешно изменен", fullNameField.getValue()), 5000, Notification.Position.BOTTOM_END)
                             .addThemeVariants(NotificationVariant.LUMO_SUCCESS
                             );
                 } catch (NotFoundException ex) {
