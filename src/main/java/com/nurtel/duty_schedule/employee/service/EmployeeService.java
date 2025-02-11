@@ -72,6 +72,16 @@ public class EmployeeService {
         return null;
     }
 
+    public static void guidCheck(
+            EmployeeRepository employeeRepository,
+            String guid
+    ) throws NotFoundException {
+        Optional<EmployeeEntity> employeeEntityOptional = employeeRepository.findByGUID(guid);
+        if (employeeEntityOptional.isPresent()){
+            throw new NotFoundException("Сотрудник с казанным guid уже есть в базе");
+        }
+    }
+
     @Transactional
     public static EmployeeEntity createEmployee(
             DepartmentRepository departmentRepository,
@@ -84,8 +94,10 @@ public class EmployeeService {
             String altPhoneNumber,
             String telegram,
             String login,
-            EmployeeEntity ifUnavailable
+            EmployeeEntity ifUnavailable,
+            String guid
     ) throws NotFoundException, BadRequestException {
+        guidCheck(employeeRepository, guid);
 
         department = departmentCheck(departmentRepository, department);
 
@@ -103,6 +115,7 @@ public class EmployeeService {
                 .telegram(telegram)
                 .login(login)
                 .ifUnavailable(ifUnavailable)
+                .guid(guid)
                 .build();
 
         Optional<EmployeeEntity> manager = employeeRepository.findManagerByDepartmentId(department.getId());
@@ -140,7 +153,8 @@ public class EmployeeService {
             String altPhoneNumber,
             String telegram,
             String login,
-            EmployeeEntity ifUnavailable
+            EmployeeEntity ifUnavailable,
+            String guid
     ) throws NotFoundException {
         EmployeeEntity employee;
         Optional<EmployeeEntity> employeeCheck = employeeRepository.findById(id);
@@ -217,6 +231,10 @@ public class EmployeeService {
         if (telegram != null) employee.setTelegram(telegram);
         if (ifUnavailable != null) employee.setIfUnavailable(ifUnavailable);
         if (login != null) employee.setLogin(login);
+        if (guid != null){
+            guidCheck(employeeRepository, guid);
+            employee.setGuid(guid);
+        }
 
         employeeRepository.save(employee);
 

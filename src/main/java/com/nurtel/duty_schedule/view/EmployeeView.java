@@ -20,9 +20,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,7 +31,6 @@ public class EmployeeView extends VerticalLayout {
     public static Button deleteButton = new Button();
     public static Button editButton = new Button();
 
-    @Autowired
     public EmployeeView(
             EmployeeRepository employeeRepository,
             ScheduleRepository scheduleRepository,
@@ -177,7 +174,8 @@ public class EmployeeView extends VerticalLayout {
                             altPhoneNumberField.getValue(),
                             telegramField.getValue(),
                             null,
-                            ifUnavailableComboBox.getValue()
+                            ifUnavailableComboBox.getValue(),
+                            null
                     );
                     Notification.show(String.format(
                                     "Сотрудник \"%s\" успешно создан", fullNameField), 5000, Notification.Position.BOTTOM_END)
@@ -313,7 +311,8 @@ public class EmployeeView extends VerticalLayout {
                             altPhoneNumberField.getValue(),
                             telegramField.getValue(),
                             null,
-                            ifUnavailableComboBox.getValue()
+                            ifUnavailableComboBox.getValue(),
+                            null
                     );
                     Notification.show(String.format(
                                     "Сотрудник \"%s\" успешно изменен", fullNameField), 5000, Notification.Position.BOTTOM_END)
@@ -354,7 +353,6 @@ public class EmployeeView extends VerticalLayout {
         return editEmployeeButton;
     }
 
-    @Transactional
     private Button deleteEmployeeButton(EmployeeRepository employeeRepository,
                                         Grid<EmployeeEntity> grid,
                                         ScheduleRepository scheduleRepository) {

@@ -18,6 +18,7 @@ public class EmployeeRequest {
     protected String telegram;
     protected String login;
     protected EmployeeEntity ifUnavailable;
+    protected String guid;
 
     public void validate() throws BadRequestException {
         if (fullName == null || fullName.isBlank()) throw new BadRequestException("");

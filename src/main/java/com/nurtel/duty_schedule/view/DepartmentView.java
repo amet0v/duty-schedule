@@ -6,7 +6,6 @@ import com.nurtel.duty_schedule.department.service.DepartmentService;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
 import com.nurtel.duty_schedule.exceptions.NotFoundException;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;

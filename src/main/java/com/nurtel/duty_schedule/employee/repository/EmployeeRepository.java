@@ -22,4 +22,7 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, Long> 
 
     @Query("SELECT e FROM EmployeeEntity e WHERE e.login = :login")
     Optional<EmployeeEntity> findByLogin(@Param("login") String login);
+
+    @Query("SELECT e FROM EmployeeEntity e WHERE e.guid = :guid")
+    Optional<EmployeeEntity> findByGUID(@Param("guid") String guid);
 }

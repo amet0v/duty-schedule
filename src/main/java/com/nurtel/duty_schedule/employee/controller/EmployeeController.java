@@ -50,7 +50,8 @@ public class EmployeeController {
                 request.getAlternativePhoneNumber(),
                 request.getTelegram(),
                 request.getLogin(),
-                request.getIfUnavailable()
+                request.getIfUnavailable(),
+                request.getGuid()
         );
         return EmployeeResponse.of(employee);
     }
@@ -72,14 +73,28 @@ public class EmployeeController {
                 request.getAlternativePhoneNumber(),
                 request.getTelegram(),
                 request.getLogin(),
-                request.getIfUnavailable()
+                request.getIfUnavailable(),
+                request.getGuid()
         );
         return EmployeeResponse.of(employee);
     }
 
-    @DeleteMapping(BaseRoutes.EMPLOYEE_BY_ID)
-    public String deleteEmployee(@PathVariable Long id) throws NotFoundException {
-        EmployeeService.deleteEmployee(employeeRepository, scheduleRepository, id);
+    @DeleteMapping(BaseRoutes.EMPLOYEE_BY_ID_OR_GUID)
+    public String deleteEmployee(@PathVariable String idOrGuid) throws NotFoundException {
+        Optional<EmployeeEntity> employee;
+
+        if (idOrGuid.matches("\\d+")) {
+            Long id = Long.parseLong(idOrGuid);
+            employee = employeeRepository.findById(id);
+        } else {
+            employee = employeeRepository.findByGUID(idOrGuid);
+        }
+
+        if (employee.isEmpty()) {
+            throw new NotFoundException("Сотрудник не найден");
+        }
+
+        EmployeeService.deleteEmployee(employeeRepository, scheduleRepository, employee.get().getId());
 
         return HttpStatus.OK.name();
     }
