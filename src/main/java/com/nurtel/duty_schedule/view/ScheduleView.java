@@ -11,6 +11,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
@@ -85,8 +86,16 @@ public class ScheduleView extends VerticalLayout {
                     .setAutoWidth(true)
                     .setResizable(true);
 
-            employeeEntityGrid.addColumn(employee ->
-                            employee.getTelegram() != null ? employee.getTelegram() : "Не указан")
+            employeeEntityGrid.addColumn(new ComponentRenderer<>(employee -> {
+                        if (employee.getTelegram() != null && !employee.getTelegram().isBlank()){
+                            Anchor telegramLink = new Anchor(
+                                    "https://t.me/" + employee.getTelegram().substring(1), employee.getTelegram()
+                            );
+                            telegramLink.setTarget("_blank");
+                            return telegramLink;
+                        }
+                        return new Span("Не указан");
+                    }))
                     .setHeader("Telegram")
                     .setSortable(true)
                     .setFrozen(true)

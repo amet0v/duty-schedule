@@ -13,11 +13,14 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.data.domain.Sort;
@@ -90,8 +93,16 @@ public class EmployeeView extends VerticalLayout {
                 .setSortable(true)
                 .setResizable(true);
 
-        employeeEntityGrid.addColumn(employee ->
-                        employee.getTelegram() != null ? employee.getTelegram() : "Не указан")
+        employeeEntityGrid.addColumn(new ComponentRenderer<>(employee -> {
+                    if (employee.getTelegram() != null && !employee.getTelegram().isBlank()){
+                        Anchor telegramLink = new Anchor(
+                                "https://t.me/" + employee.getTelegram().substring(1), employee.getTelegram()
+                        );
+                        telegramLink.setTarget("_blank");
+                        return telegramLink;
+                    }
+                    return new Span("Не указан");
+                }))
                 .setHeader("Telegram")
                 .setSortable(true)
                 .setResizable(true);

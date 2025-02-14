@@ -1,6 +1,6 @@
 # WEB приложение + REST API для контроля дежурств сотрудников
 
-Документация swagger - `localhost:8080/swagger-ui/index.html`
+Документация swagger - `/api/swagger-ui.html`
 
 После запуска приложения необходимо создать базового пользователя:\
 `GET /api/v1/not-secured/init`\

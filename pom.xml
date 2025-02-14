@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.nurtel</groupId>
     <artifactId>duty-schedule</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>duty-schedule</name>
     <description>Duty schedule REST API for Nurtelecom</description>
     <url/>
