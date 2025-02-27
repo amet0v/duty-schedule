@@ -23,9 +23,11 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Optional;
 
 @Route(value = "/employees", layout = MainLayout.class)
 @PageTitle("Сотрудники")
@@ -198,9 +200,7 @@ public class EmployeeView extends VerticalLayout {
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 
-                grid.setItems(employeeRepository.findAll(
-                        Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
-                ));
+                grid.setItems(setSortedItems(employeeRepository));
                 ifUnavailableComboBox.clear();
                 ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
 
@@ -351,9 +351,7 @@ public class EmployeeView extends VerticalLayout {
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 }
 
-                grid.setItems(employeeRepository.findAll(
-                        Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
-                ));
+                grid.setItems(setSortedItems(employeeRepository));
                 ifUnavailableComboBox.clear();
                 ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
 
@@ -437,7 +435,8 @@ public class EmployeeView extends VerticalLayout {
 
     private List<EmployeeEntity> setSortedItems(EmployeeRepository employeeRepository) {
         return employeeRepository.findAll(
-                Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
+                Sort.by(Sort.Direction.ASC, "id")
+                //Sort.by(Sort.Order.asc("department.id"), Sort.Order.desc("isManager"), Sort.Order.asc("fullName"))
         );
     }
 }

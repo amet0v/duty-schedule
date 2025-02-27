@@ -1,9 +1,12 @@
 package com.nurtel.duty_schedule.view;
 
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
+import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
 import com.nurtel.duty_schedule.employee.repository.EmployeeRepository;
+import com.nurtel.duty_schedule.employee.service.EmployeeService;
 import com.nurtel.duty_schedule.exceptions.BadRequestException;
+import com.nurtel.duty_schedule.exceptions.NotFoundException;
 import com.nurtel.duty_schedule.user.entity.UserEntity;
 import com.nurtel.duty_schedule.user.repository.UserRepository;
 import com.nurtel.duty_schedule.user.service.UserService;
@@ -12,6 +15,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H1;
@@ -30,6 +34,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -48,9 +53,10 @@ public class MainLayout extends AppLayout {
     private MenuBar logoutBar;
     private MenuItem usernameItem;
     private final Integer sessionInterval = 3600;
+    private Button editMyProfileButton;
 
-    public MainLayout(UserRepository userRepository, EmployeeRepository employeeRepository) {
-        createHeader(userRepository, employeeRepository);
+    public MainLayout(UserRepository userRepository, EmployeeRepository employeeRepository, DepartmentRepository departmentRepository) {
+        createHeader(userRepository, employeeRepository, departmentRepository);
         createSidebar();
     }
 
@@ -101,13 +107,14 @@ public class MainLayout extends AppLayout {
             DepartmentView.editButton.setVisible(auth && role);
             DepartmentView.deleteButton.setVisible(auth && role);
 
+            editMyProfileButton.setVisible(auth);
             EmployeeView.addButton.setVisible(auth && role);
             EmployeeView.editButton.setVisible(auth && role);
             EmployeeView.deleteButton.setVisible(auth && role);
         });
     }
 
-    private void createHeader(UserRepository userRepository, EmployeeRepository employeeRepository) {
+    private void createHeader(UserRepository userRepository, EmployeeRepository employeeRepository, DepartmentRepository departmentRepository) {
         H1 logo = new H1("О! НурТелеком");
         logo.getStyle()
                 .set("margin", "0")
@@ -260,7 +267,9 @@ public class MainLayout extends AppLayout {
                 .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
 
-        usernameItem.getSubMenu().addItem(addUserButton);
+        //usernameItem.getSubMenu().addItem(addUserButton);
+        editMyProfileButton = editMyProfileButton(employeeRepository, departmentRepository);
+        usernameItem.getSubMenu().addItem(editMyProfileButton);
 
         usernameItem.getSubMenu().addItem(logoutButton);
         logoutBar.setVisible(isAuthenticated);
@@ -350,5 +359,115 @@ public class MainLayout extends AppLayout {
                 .set("height", "100vh");
 
         addToDrawer(sidebar);
+    }
+
+    private Button editMyProfileButton(
+            EmployeeRepository employeeRepository,
+            DepartmentRepository departmentRepository
+    ) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Редактировать информацию о себе");
+
+        VerticalLayout dialogLayout = new VerticalLayout();
+        dialog.add(dialogLayout);
+
+        String authorizedEmployee = (String) VaadinSession.getCurrent().getAttribute("username");
+        Optional<EmployeeEntity> selectedEmployeeOptional = employeeRepository.findByLogin(authorizedEmployee);
+        if (selectedEmployeeOptional.isEmpty()) return new Button("empty");
+        EmployeeEntity selectedEmployee = selectedEmployeeOptional.get();
+
+        TextField fullNameField = new TextField("Фамилия Имя");
+        fullNameField.setValue(selectedEmployee.getFullName());
+
+        ComboBox<DepartmentEntity> departmentComboBox = new ComboBox<>("Отдел");
+        departmentComboBox.setItems(departmentRepository.findAll(Sort.by(Sort.Direction.ASC, "id")));
+        departmentComboBox.setItemLabelGenerator(DepartmentEntity::getName);
+        departmentComboBox.setValue(selectedEmployee.getDepartment());
+
+        TextField groupField = new TextField("Группа");
+        groupField.setValue(selectedEmployee.getGroup() != null ? selectedEmployee.getGroup() : "");
+
+        TextField mainPhoneNumberField = new TextField("Основной тел. номер");
+        mainPhoneNumberField.setValue(selectedEmployee.getMainPhoneNumber()!= null ? selectedEmployee.getMainPhoneNumber() : "");
+
+        TextField altPhoneNumberField = new TextField("Альтернативный тел. номер");
+        altPhoneNumberField.setValue(selectedEmployee.getAlternativePhoneNumber()!= null ? selectedEmployee.getAlternativePhoneNumber() : "");
+
+        TextField telegramField = new TextField("Телеграм");
+        telegramField.setValue(selectedEmployee.getTelegram()!= null ? selectedEmployee.getTelegram() : "");
+
+        ComboBox<EmployeeEntity> ifUnavailableComboBox = new ComboBox<>("Если недоступен");
+        ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedEmployee.getDepartment().getId()));
+        ifUnavailableComboBox.setValue(selectedEmployee.getIfUnavailable());
+
+        dialogLayout.add(
+                fullNameField,
+                departmentComboBox,
+                groupField,
+                mainPhoneNumberField,
+                altPhoneNumberField,
+                telegramField,
+                ifUnavailableComboBox
+        );
+
+        departmentComboBox.addValueChangeListener(event -> {
+            DepartmentEntity selectedDepartment = event.getValue();
+            if (selectedDepartment != null) {
+                ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
+            } else {
+                ifUnavailableComboBox.clear();
+                ifUnavailableComboBox.setItems();
+            }
+        });
+
+        Button editButton = new Button("Редактировать", e -> {
+            DepartmentEntity selectedDepartment = departmentComboBox.getValue();
+            if (selectedDepartment != null && !fullNameField.isEmpty()) {
+                try {
+                    EmployeeService.editEmployee(
+                            departmentRepository,
+                            employeeRepository,
+                            selectedEmployee.getId(),
+                            fullNameField.getValue(),
+                            selectedDepartment,
+                            selectedEmployee.getIsManager(),
+                            groupField.getValue(),
+                            mainPhoneNumberField.getValue(),
+                            altPhoneNumberField.getValue(),
+                            telegramField.getValue(),
+                            null,
+                            ifUnavailableComboBox.getValue(),
+                            null
+                    );
+                    Notification.show(String.format(
+                                    "Сотрудник \"%s\" успешно изменен", fullNameField.getValue()), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS
+                            );
+                } catch (NotFoundException ex) {
+                    Notification.show(ex.getMessage(), 5000, Notification.Position.BOTTOM_END)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+
+                ifUnavailableComboBox.clear();
+                ifUnavailableComboBox.setItems(employeeRepository.findAllByDepartment(selectedDepartment.getId()));
+
+                dialog.close();
+            } else {
+                Notification.show("Заполните все обязательные поля", 5000, Notification.Position.BOTTOM_END)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+        editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Отмена", e -> dialog.close());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        dialog.getFooter().add(editButton, cancelButton);
+
+        Button editEmployeeButton = new Button("Мой профиль", VaadinIcon.USER_CARD.create(), e -> {
+            dialog.open();
+        });
+        editEmployeeButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+
+        return editEmployeeButton;
     }
 }
