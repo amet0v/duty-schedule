@@ -48,9 +48,9 @@ public class EmployeeView extends VerticalLayout {
         addButton = addEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
         editButton = editEmployeeButton(employeeRepository, employeeEntityGrid, departmentRepository);
 
-        addButton.setVisible(MainLayout.isAuthenticated());
-        deleteButton.setVisible(MainLayout.isAuthenticated());
-        editButton.setVisible(MainLayout.isAuthenticated());
+        addButton.setVisible(MainLayout.isAuthenticated() && MainLayout.isManager());
+        deleteButton.setVisible(MainLayout.isAuthenticated() && MainLayout.isManager());
+        editButton.setVisible(MainLayout.isAuthenticated() && MainLayout.isManager());
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         horizontalLayout.add(addButton, editButton, deleteButton);

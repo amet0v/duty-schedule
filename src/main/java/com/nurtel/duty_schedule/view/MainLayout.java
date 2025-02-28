@@ -19,6 +19,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
@@ -31,6 +32,7 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,24 +104,37 @@ public class MainLayout extends AppLayout {
                 username = "";
             }
             updateLogoutBar(username);
-
+            
             DepartmentView.addButton.setVisible(auth && role);
             DepartmentView.editButton.setVisible(auth && role);
             DepartmentView.deleteButton.setVisible(auth && role);
 
-            editMyProfileButton.setVisible(auth);
             EmployeeView.addButton.setVisible(auth && role);
             EmployeeView.editButton.setVisible(auth && role);
             EmployeeView.deleteButton.setVisible(auth && role);
+
+            editMyProfileButton.setVisible(auth);
         });
     }
 
     private void createHeader(UserRepository userRepository, EmployeeRepository employeeRepository, DepartmentRepository departmentRepository) {
-        H1 logo = new H1("О! НурТелеком");
+        StreamResource imageResource = new StreamResource("logo_o.svg",
+                () -> getClass().getResourceAsStream("/images/logo_o.svg"));
+
+        Image image = new Image(imageResource, "My Streamed Image");
+        image.setWidth("70px");
+        image.setHeight("70px");
+
+        H1 logo = new H1("«NUR Telecom» LLC");
         logo.getStyle()
                 .set("margin", "0")
                 .set("font-size", "var(--lumo-font-size-xl)")
                 .set("color", "#ffffff");
+
+        HorizontalLayout nurLogo = new HorizontalLayout();
+        nurLogo.setSpacing(false);
+        nurLogo.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        nurLogo.add(image, logo);
 
         boolean isAuthenticated = VaadinSession.getCurrent().getSession().getAttribute("username") != null;
 
@@ -277,10 +292,10 @@ public class MainLayout extends AppLayout {
                 .set("background-color", "#ff2898")
                 .set("color", "#ffffff");
 
-        HorizontalLayout header = new HorizontalLayout(logo, loginButton, logoutBar);
+        HorizontalLayout header = new HorizontalLayout(nurLogo, loginButton, logoutBar);
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
         header.setWidthFull();
-        header.setPadding(true);
+        header.setPadding(false);
         header.setSpacing(true);
 
         header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
@@ -288,7 +303,11 @@ public class MainLayout extends AppLayout {
         header.getStyle()
                 .set("border-bottom", "1px solid var(--lumo-contrast-10pct)")
                 .set("background-color", "#ef107f")
-                .set("color", "#000000");
+                .set("color", "#000000")
+                .set("padding", "0.2%")
+                //.set("padding-bottom", "0.5%")
+                .set("padding-right", "1%")
+                .set("margin", "0");
 
         addToNavbar(header);
 

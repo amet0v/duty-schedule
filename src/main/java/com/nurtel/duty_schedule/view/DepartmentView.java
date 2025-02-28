@@ -39,9 +39,9 @@ public class DepartmentView extends VerticalLayout {
         deleteButton = deleteDepartmentButton(departmentRepository, departmentEntityGrid);
         editButton = editDepartmentButton(departmentRepository, departmentEntityGrid);
 
-        addButton.setVisible(MainLayout.isAuthenticated());
-        deleteButton.setVisible(MainLayout.isAuthenticated());
-        editButton.setVisible(MainLayout.isAuthenticated());
+        addButton.setVisible(MainLayout.isAuthenticated() && MainLayout.isManager());
+        deleteButton.setVisible(MainLayout.isAuthenticated() && MainLayout.isManager());
+        editButton.setVisible(MainLayout.isAuthenticated() && MainLayout.isManager());
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         horizontalLayout.add(addButton, editButton, deleteButton);

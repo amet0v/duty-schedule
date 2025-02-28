@@ -46,6 +46,7 @@ public class ScheduleView extends VerticalLayout {
             H3 departmentHeader = new H3(department.toString());
 
             Grid<EmployeeEntity> employeeEntityGrid = new Grid<>(EmployeeEntity.class);
+            employeeEntityGrid.setAllRowsVisible(true);
             add(employeeEntityGrid);
             employeeEntityGrid.removeAllColumns();
 
@@ -110,14 +111,15 @@ public class ScheduleView extends VerticalLayout {
                     .setAutoWidth(true)
                     .setResizable(true);
 
+            int plusDays = 61;
             LocalDate startDate = LocalDate.now();
-            LocalDate endDate = startDate.plusDays(30);
+            LocalDate endDate = startDate.plusDays(plusDays);
 
             boolean isVisible = MainLayout.isAuthenticated() && MainLayout.isManager() && MainLayout.isInDepartment(department);
 
             List<ScheduleEntity> events = scheduleRepository.findAllByDateRangeAndEmployees(startDate, endDate, department.getEmployees());
 
-            IntStream.range(0, 31).forEach(dayOffset -> {
+            IntStream.range(0, plusDays).forEach(dayOffset -> {
                 LocalDate currentDate = startDate.plusDays(dayOffset);
                 String columnHeader = currentDate.format(DateTimeFormatter.ofPattern("dd.MM"));
 
