@@ -339,7 +339,11 @@ public class MainLayout extends AppLayout {
         archiveIcon.setColor("#b8c7ce");
         SideNavItem archiveItem = new SideNavItem("Архив", ArchiveView.class, archiveIcon);
 
-        List<SideNavItem> sideNavItems = List.of(departmentItem, employeeItem, scheduleItem, archiveItem);
+        Icon holidaysIcon = VaadinIcon.GIFT.create();
+        holidaysIcon.setColor("#b8c7ce");
+        SideNavItem holidaysItem = new SideNavItem("Праздники", HolidayView.class, holidaysIcon);
+
+        List<SideNavItem> sideNavItems = List.of(departmentItem, employeeItem, scheduleItem, archiveItem, holidaysItem);
 
         for (SideNavItem item : sideNavItems) {
             item.getStyle()
@@ -366,7 +370,7 @@ public class MainLayout extends AppLayout {
         sideNav.getStyle()
                 .set("background-color", "#232b33");
 
-        sideNav.addItem(departmentItem, employeeItem, scheduleItem, archiveItem);
+        sideNav.addItem(departmentItem, employeeItem, scheduleItem, archiveItem, holidaysItem);
         addToDrawer(sideNav);
 
         VerticalLayout sidebar = new VerticalLayout();

@@ -3,6 +3,8 @@ package com.nurtel.duty_schedule.view;
 import com.nurtel.duty_schedule.department.entity.DepartmentEntity;
 import com.nurtel.duty_schedule.department.repository.DepartmentRepository;
 import com.nurtel.duty_schedule.employee.entity.EmployeeEntity;
+import com.nurtel.duty_schedule.holiday.entity.HolidayEntity;
+import com.nurtel.duty_schedule.holiday.repository.HolidayRepository;
 import com.nurtel.duty_schedule.schedule.entity.EventTypes;
 import com.nurtel.duty_schedule.schedule.entity.ScheduleEntity;
 import com.nurtel.duty_schedule.schedule.repository.ScheduleRepository;
@@ -28,6 +30,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -38,9 +41,9 @@ public class ScheduleView extends VerticalLayout {
 
     @Autowired
     public ScheduleView(DepartmentRepository departmentRepository,
-                        ScheduleRepository scheduleRepository) {
+                        ScheduleRepository scheduleRepository, HolidayRepository holidayRepository) {
 
-        var departments = departmentRepository.findAll(Sort.by(Sort.Order.asc("number")));
+        var departments = departmentRepository.findAllWithNumber();
 
         for (DepartmentEntity department : departments) {
             H3 departmentHeader = new H3(department.toString());
@@ -118,12 +121,19 @@ public class ScheduleView extends VerticalLayout {
             boolean isVisible = MainLayout.isAuthenticated() && MainLayout.isManager() && MainLayout.isInDepartment(department);
 
             List<ScheduleEntity> events = scheduleRepository.findAllByDateRangeAndEmployees(startDate, endDate, department.getEmployees());
+            List<HolidayEntity> holidayEntities = holidayRepository.findByDateBetween(startDate, endDate);
+            List<LocalDate> holidays = new ArrayList<>();
+            for (HolidayEntity holiday : holidayEntities){
+                holidays.add(holiday.getDate());
+            }
+
 
             IntStream.range(0, plusDays).forEach(dayOffset -> {
                 LocalDate currentDate = startDate.plusDays(dayOffset);
                 String columnHeader = currentDate.format(DateTimeFormatter.ofPattern("dd.MM"));
 
-                boolean isWeekend = currentDate.getDayOfWeek() == DayOfWeek.SATURDAY || currentDate.getDayOfWeek() == DayOfWeek.SUNDAY;
+                boolean isWeekend = (currentDate.getDayOfWeek() == DayOfWeek.SATURDAY || currentDate.getDayOfWeek() == DayOfWeek.SUNDAY)
+                        || holidays.contains(currentDate);
                 if (isWeekend) columnHeader += "\uD83D\uDFE5";
                 else columnHeader += "\uD83D\uDFE6";
 
