@@ -36,10 +36,18 @@ public class ScheduleController {
         Optional<ScheduleEntity> duty = scheduleRepository.findDutyByDepartmentAndDate(departmentId, currentDate, EventTypes.Duty);
 
         if (duty.isEmpty()) {
+            Optional<ScheduleEntity> checkVacation;
             List<EmployeeEntity> employees = employeeRepository.findDutyByDepartmentIdOrderByLastCallDateAsc(departmentId);
             employees.sort(Comparator.comparing(EmployeeEntity::getLastCallDate, Comparator.nullsFirst(Comparator.naturalOrder())));
             employee = employees.getFirst();
-        }else {
+            checkVacation = scheduleRepository.findAllEventsByEmployeeAndDate(
+                    employee.getId(),
+                    currentDate
+            );
+            if (checkVacation.isPresent())
+                if (checkVacation.get().getEvent() == EventTypes.Vacation)
+                    employee = employees.get(1);
+        } else {
             employee = duty.get().getEmployee();
         }
         employee.setLastCallDate(new Date());
@@ -74,7 +82,8 @@ public class ScheduleController {
                 request.getStartDate(),
                 EventTypes.Duty
         );
-        if (duty.isPresent() && request.getEvent() == EventTypes.Duty) throw new BadRequestException("На эту дату уже назначен дежурный");
+        if (duty.isPresent() && request.getEvent() == EventTypes.Duty)
+            throw new BadRequestException("На эту дату уже назначен дежурный");
 
         duty = scheduleRepository.findAllEventsByEmployeeAndDate(
                 employee.getId(), request.getStartDate()
@@ -94,7 +103,7 @@ public class ScheduleController {
     }
 
     @DeleteMapping(BaseRoutes.SCHEDULE_BY_ID)
-    public String deleteEvent(@PathVariable Long id){
+    public String deleteEvent(@PathVariable Long id) {
         scheduleRepository.deleteById(id);
         return HttpStatus.OK.name();
     }
